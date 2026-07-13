@@ -127,13 +127,6 @@ curl -X POST http://localhost:8080/api/enrollments \
 
 See [docs/architecture.md](docs/architecture.md) and [docs/evolution-roadmap.md](docs/evolution-roadmap.md).
 
-## How chapters should reference this repo
-
-- Cite **paths** instead of line numbers when possible (paths stay stable across edits)
-- Start from `monolith-baseline` for Java/Spring snippets
-- Use `docker/` and `k8s/` for infrastructure chapters
-- Use `services/*/README.md` to introduce extraction without spoiling later code
-
 ## License
 
 MIT — see [LICENSE](LICENSE).
