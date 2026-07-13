@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: campusflow-monolith-config
+  namespace: campusflow
+data:
+  SPRING_PROFILES_ACTIVE: "k8s,docker"
+  CAMPUSFLOW_SCHOOL_NAME: "CampusFlow Academy (Kubernetes)"
+  CAMPUSFLOW_FEATURE_ATTENDANCE_REMINDERS: "true"
+  CAMPUSFLOW_FEATURE_ENROLLMENT_CONFIRMATION: "true"
+  CAMPUSFLOW_NOTIFICATION_FROM: "noreply@campusflow.example"
+  CAMPUSFLOW_DB_URL: "jdbc:postgresql://postgres:5432/campusflow"

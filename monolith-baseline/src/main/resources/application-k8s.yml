@@ -1,0 +1,8 @@
+spring:
+  config:
+    import: optional:configtree:/etc/campusflow/
+
+management:
+  endpoint:
+    health:
+      show-details: when_authorized

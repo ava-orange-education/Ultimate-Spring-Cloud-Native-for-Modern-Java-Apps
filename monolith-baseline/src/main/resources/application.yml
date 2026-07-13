@@ -1,0 +1,63 @@
+spring:
+  application:
+    name: campusflow-monolith
+
+  datasource:
+    url: ${CAMPUSFLOW_DB_URL:jdbc:postgresql://localhost:5432/campusflow}
+    username: ${CAMPUSFLOW_DB_USER:campusflow}
+    password: ${CAMPUSFLOW_DB_PASSWORD:campusflow}
+    hikari:
+      maximum-pool-size: 10
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+
+server:
+  port: ${SERVER_PORT:8080}
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+
+campusflow:
+  school-name: ${CAMPUSFLOW_SCHOOL_NAME:CampusFlow Academy}
+  features:
+    attendance-reminders: ${CAMPUSFLOW_FEATURE_ATTENDANCE_REMINDERS:true}
+    enrollment-confirmation: ${CAMPUSFLOW_FEATURE_ENROLLMENT_CONFIRMATION:true}
+  notifications:
+    from-address: ${CAMPUSFLOW_NOTIFICATION_FROM:noreply@campusflow.example}
+
+info:
+  app:
+    name: CampusFlow Monolith
+    description: Didactic school administration reference system
+    version: 0.1.0
+
+logging:
+  level:
+    root: INFO
+    com.campusflow: INFO
