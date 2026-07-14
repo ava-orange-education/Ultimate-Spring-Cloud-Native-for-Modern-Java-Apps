@@ -16,8 +16,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Notifications are persisted in the shared database and invoked synchronously
- * from other domains — a natural first service to extract.
+ * Sends and stores notifications. Called synchronously by enrollment and attendance.
  */
 @Service
 @Transactional
@@ -62,7 +61,7 @@ public class NotificationService {
 
         notificationRepository.save(notification);
 
-        // Educational stand-in for an external email provider.
+        // In production this would call an external email provider.
         log.info("notification_sent type={} from={} to={} subject={}",
                 type, appProperties.getNotifications().getFromAddress(), recipient, subject);
     }
