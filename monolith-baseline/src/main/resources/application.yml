@@ -54,7 +54,7 @@ campusflow:
 info:
   app:
     name: CampusFlow Monolith
-    description: Didactic school administration reference system
+    description: CampusFlow school administration system
     version: 0.1.0
 
 logging:
