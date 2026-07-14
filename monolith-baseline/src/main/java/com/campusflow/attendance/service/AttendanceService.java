@@ -20,8 +20,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Attendance is a strong extraction candidate: it crosses student/class data
- * and synchronously triggers notifications today.
+ * Records attendance and sends absence alerts.
+ * Validates that the student is enrolled in the class before recording.
  */
 @Service
 @Transactional

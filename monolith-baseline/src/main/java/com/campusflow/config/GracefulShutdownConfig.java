@@ -6,8 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Enables graceful shutdown — useful for Kubernetes rolling updates and book snippets
- * on zero-downtime deployments.
+ * Configures graceful shutdown so in-flight requests complete during rolling updates.
  */
 @Configuration
 public class GracefulShutdownConfig {

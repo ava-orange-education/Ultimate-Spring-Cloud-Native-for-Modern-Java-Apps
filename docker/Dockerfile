@@ -1,4 +1,4 @@
-# Multi-stage build for a compact runtime image (book snippet friendly).
+# Multi-stage build for a compact runtime image.
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /workspace
 

@@ -18,8 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * Enrollment spans student and class domains. It loads entities through sibling
- * services and triggers notifications — a realistic monolith coupling point.
+ * Coordinates enrollment across student and class modules.
+ * Sends a confirmation notification when enrollment succeeds.
  */
 @Service
 @Transactional
