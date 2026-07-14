@@ -1,27 +1,31 @@
-# Notification Service (extraction candidate)
+# Notification Service
 
-This folder is reserved for a later book chapter where the **notification** bounded context is extracted from the monolith.
+Companion material for the book chapter on extracting the **notification** module from the monolith.
 
-## Why notifications first?
+## What the monolith does today
 
-- Clear boundary: outbound messaging with its own persistence
-- Called synchronously from enrollment and attendance today
-- Natural fit for async processing and external providers
-- Low risk starting point for the Strangler Fig pattern
+The notification module sends enrollment confirmations and absence alerts. It stores each message in the `notifications` table and logs it (standing in for an external email provider).
 
-## Planned API surface
+**Monolith code:**
+- `monolith-baseline/src/main/java/com/campusflow/notification/service/NotificationService.java`
+- Called from `EnrollmentService` and `AttendanceService`
+
+## What the book builds next
+
+A standalone service with its own database:
 
 ```
 GET  /api/notifications
-POST /api/notifications/absence-alert
 POST /api/notifications/enrollment-confirmation
+POST /api/notifications/absence-alert
 ```
 
-## Migration seam in the monolith
+## Try it in the monolith
 
-See `monolith-baseline/src/main/java/com/campusflow/notification/service/NotificationService.java` and callers in:
+```bash
+curl -X POST http://localhost:8080/api/attendance \
+  -H 'Content-Type: application/json' \
+  -d '{"studentId":1,"classId":1,"date":"2026-07-14","status":"ABSENT"}'
 
-- `EnrollmentService`
-- `AttendanceService`
-
-Later chapters can replace direct service calls with HTTP or messaging while routing through an API gateway.
+curl http://localhost:8080/api/notifications
+```

@@ -1,83 +1,180 @@
-# CampusFlow Reference System
+# CampusFlow — Companion Code for *Ultimate Spring Cloud Native for Modern Java Apps*
 
-**CampusFlow** is a didactic reference application for a technical book on cloud-native Java with Spring Boot, Spring Cloud, Docker, and Kubernetes.
+Welcome! This repository contains **CampusFlow**, the hands-on reference application used throughout the book.
 
-It is **not** production software and **not** copied from any customer codebase. Everything here is original, educational sample code designed to support architecture explanations, migration examples, and copy-paste-friendly book snippets.
+CampusFlow is a small school administration system built with Spring Boot. You start with a realistic monolith and evolve it step by step toward a cloud-native architecture — containerization, Kubernetes, observability, service extraction, and more.
 
-## Domain
+> **Note:** This is educational sample code. It is not production software and not copied from any customer codebase.
 
-CampusFlow models a small school administration platform:
+## What you will build
 
-| Module | Responsibility |
-|--------|----------------|
-| **Students** | Student master data |
-| **Classes** | Course and section management |
-| **Enrollment** | Student-to-class registration |
-| **Attendance** | Daily attendance records |
-| **Notifications** | Outbound alerts (email stand-in) |
+| Module | What it does |
+|--------|--------------|
+| **Students** | Manage student master data |
+| **Classes** | Manage courses, terms, and capacity |
+| **Enrollment** | Register students in classes |
+| **Attendance** | Record daily attendance |
+| **Notifications** | Send alerts when students enroll or are absent |
 
-## Repository layout
+The baseline is intentionally monolithic: one application, one database, and some cross-module coupling — exactly the kind of system teams modernize in real life.
 
-```
-campusflow-reference/
-├── monolith-baseline/     # Working Spring Boot monolith (baseline chapter)
-├── docker/                # Dockerfile and docker-compose
-├── k8s/                   # Kubernetes manifests
-├── services/              # Extraction candidate scaffolds (future chapters)
-├── gateway/               # API gateway scaffold (future chapter)
-├── docs/                  # Architecture and evolution guides
-└── .github/workflows/     # CI pipeline example
-```
+The `services/` and `gateway/` folders are **companion guides** for later chapters. They point to monolith code and show extraction and routing patterns — they are not standalone runnable services.
 
-### Why this structure?
+## Quick start (5 minutes)
 
-A **single repository with evolution folders** works best for a book:
-
-- Readers clone once and follow a clear path
-- Chapters can reference stable paths (`monolith-baseline/...`, `k8s/deployment.yaml`)
-- Future stages (`services/`, `gateway/`) can grow without branch switching
-- Side-by-side comparison is easy (monolith vs extracted service)
-
-Git tags such as `v0.1-monolith-baseline` can mark chapter milestones later.
-
-## Prerequisites
-
-- Java 21
-- Maven 3.9+
-- PostgreSQL 16 (for local non-Docker runs)
-- Docker and Docker Compose (optional, recommended)
-
-## Run locally (PostgreSQL)
-
-1. Start PostgreSQL and create database `campusflow` with user/password `campusflow`.
-2. Build and run:
+### 1. Clone the repository
 
 ```bash
-cd monolith-baseline
-mvn spring-boot:run
+git clone https://github.com/ava-orange-education/Ultimate-Spring-Cloud-Native-for-Modern-Java-Apps.git
+cd Ultimate-Spring-Cloud-Native-for-Modern-Java-Apps
 ```
 
-3. Open http://localhost:8080/actuator/health
+### 2. Start the application (Docker — recommended)
 
-Environment variables (all optional):
-
-| Variable | Default |
-|----------|---------|
-| `CAMPUSFLOW_DB_URL` | `jdbc:postgresql://localhost:5432/campusflow` |
-| `CAMPUSFLOW_DB_USER` | `campusflow` |
-| `CAMPUSFLOW_DB_PASSWORD` | `campusflow` |
-| `SERVER_PORT` | `8080` |
-| `CAMPUSFLOW_FEATURE_ATTENDANCE_REMINDERS` | `true` |
-| `CAMPUSFLOW_FEATURE_ENROLLMENT_CONFIRMATION` | `true` |
-
-## Run with Docker Compose
+**Prerequisites:** Docker Desktop running.
 
 ```bash
 docker compose -f docker/docker-compose.yml up --build
 ```
 
-API: http://localhost:8080  
-Health: http://localhost:8080/actuator/health
+Wait until the application is ready, then open:
+
+- Health check: http://localhost:8080/actuator/health
+- API: http://localhost:8080/api/students
+
+**Stop the application:**
+
+```bash
+docker compose -f docker/docker-compose.yml down
+```
+
+### 3. Verify it works
+
+Run these commands **one at a time**:
+
+```bash
+curl http://localhost:8080/api/students
+```
+
+```bash
+curl http://localhost:8080/api/classes
+```
+
+```bash
+curl -X POST http://localhost:8080/api/enrollments \
+  -H 'Content-Type: application/json' \
+  -d '{"studentId":1,"classId":2}'
+```
+
+**Expected:** a JSON response listing three seed students (Alex, Jordan, Sam), two classes (Algebra I, World History), and a successful enrollment.
+
+### Alternative: run without Docker
+
+If you prefer a local PostgreSQL setup:
+
+**Prerequisites:** Java 21, Maven 3.9+, PostgreSQL 16+
+
+```bash
+# Create database and user (PostgreSQL)
+createdb campusflow
+# user/password: campusflow / campusflow
+
+cd monolith-baseline
+mvn spring-boot:run
+```
+
+## Seed data
+
+Flyway loads sample data on startup (`monolith-baseline/src/main/resources/db/migration/V2__seed_data.sql`):
+
+| Students | Classes |
+|----------|---------|
+| Alex Morgan (id: 1) | Algebra I (id: 1) |
+| Jordan Lee (id: 2) | World History (id: 2) |
+| Sam Patel (id: 3) | |
+
+Alex and Jordan are pre-enrolled in Algebra I. Use these IDs in the book's examples.
+
+## Repository map
+
+```
+├── monolith-baseline/     ← Start here: the Spring Boot monolith
+├── docker/                ← Containerization (Dockerfile, docker-compose)
+├── k8s/                   ← Kubernetes manifests
+├── services/              ← Service extraction guides (Ch. 11)
+├── gateway/               ← Strangler Fig routing guide (Ch. 14)
+├── docs/                  ← Architecture notes and chapter guides
+└── .github/workflows/     ← CI/CD pipeline example
+```
+
+## How to follow the book
+
+Each chapter builds on the previous one. Use this table to find the code discussed in the book:
+
+| Book topic | Where to look |
+|------------|---------------|
+| Monolith structure and domain model | `monolith-baseline/src/main/java/com/campusflow/` |
+| REST API and validation | `*/controller/`, `*/dto/` packages |
+| Shared database and coupling | `docs/architecture.md` |
+| Externalized configuration | `monolith-baseline/src/main/resources/application.yml` |
+| Feature flags | `monolith-baseline/src/main/java/com/campusflow/config/AppProperties.java` |
+| Database migrations (Flyway) | `monolith-baseline/src/main/resources/db/migration/` |
+| Error handling | `monolith-baseline/src/main/java/com/campusflow/common/exception/GlobalExceptionHandler.java` |
+| Actuator, health, metrics | `monolith-baseline/src/main/resources/application.yml` → `management.*` |
+| Structured logging | `monolith-baseline/src/main/resources/logback-spring.xml` |
+| Dockerfile and local containers | `docker/` |
+| Kubernetes deployment | `k8s/` |
+| ConfigMaps and Secrets | `k8s/configmap.yaml`, `k8s/secret.example.yaml` |
+| Readiness and liveness probes | `k8s/deployment.yaml` |
+| CI/CD pipeline | `.github/workflows/ci.yml` |
+| Service extraction guides | `services/notification-service/`, `services/attendance-service/` |
+| Strangler Fig gateway routing | `gateway/` |
+
+For the chapter-by-chapter guide (Ch. 1–14), see [docs/learning-path.md](docs/learning-path.md).
+
+## API reference
+
+Base URL: `http://localhost:8080`
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/students` | List all students |
+| `GET` | `/api/students/{id}` | Get one student |
+| `POST` | `/api/students` | Create a student |
+| `GET` | `/api/classes` | List all classes |
+| `POST` | `/api/classes` | Create a class |
+| `POST` | `/api/enrollments` | Enroll a student in a class |
+| `GET` | `/api/enrollments/by-student/{id}` | Enrollments for a student |
+| `GET` | `/api/enrollments/by-class/{id}` | Enrollments for a class |
+| `GET` | `/api/attendance?classId=&date=` | Attendance for a class on a date |
+| `POST` | `/api/attendance` | Mark attendance |
+| `GET` | `/api/notifications` | List sent notifications |
+| `GET` | `/actuator/health` | Application health |
+| `GET` | `/actuator/metrics` | Application metrics |
+
+### Hands-on exercises
+
+**Create a new student:**
+
+```bash
+curl -X POST http://localhost:8080/api/students \
+  -H 'Content-Type: application/json' \
+  -d '{"firstName":"Taylor","lastName":"Kim","email":"taylor.kim@student.campusflow.example"}'
+```
+
+**Mark attendance (absent — triggers a notification):**
+
+```bash
+curl -X POST http://localhost:8080/api/attendance \
+  -H 'Content-Type: application/json' \
+  -d '{"studentId":1,"classId":1,"date":"2026-07-14","status":"ABSENT"}'
+```
+
+**Check notifications:**
+
+```bash
+curl http://localhost:8080/api/notifications
+```
 
 ## Build and test
 
@@ -86,47 +183,57 @@ cd monolith-baseline
 mvn verify
 ```
 
-Tests use an in-memory H2 database (PostgreSQL mode). CI uses PostgreSQL.
+Tests use an in-memory H2 database and do not require PostgreSQL or Docker.
 
-## API overview
+## Configuration
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/students` | List students |
-| POST | `/api/students` | Create student |
-| GET | `/api/classes` | List classes |
-| POST | `/api/classes` | Create class |
-| POST | `/api/enrollments` | Enroll student in class |
-| GET | `/api/attendance?classId=&date=` | Attendance for a class on a date |
-| POST | `/api/attendance` | Mark attendance |
-| GET | `/api/notifications` | List sent notifications |
-| GET | `/actuator/health` | Health check |
-| GET | `/actuator/metrics` | Metrics |
+All settings can be overridden with environment variables:
 
-Seed data is loaded by Flyway (`V2__seed_data.sql`).
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `CAMPUSFLOW_DB_URL` | `jdbc:postgresql://localhost:5432/campusflow` | Database connection |
+| `CAMPUSFLOW_DB_USER` | `campusflow` | Database user |
+| `CAMPUSFLOW_DB_PASSWORD` | `campusflow` | Database password |
+| `SERVER_PORT` | `8080` | HTTP port |
+| `CAMPUSFLOW_SCHOOL_NAME` | `CampusFlow Academy` | Display name |
+| `CAMPUSFLOW_FEATURE_ATTENDANCE_REMINDERS` | `true` | Send alerts on absence |
+| `CAMPUSFLOW_FEATURE_ENROLLMENT_CONFIRMATION` | `true` | Send alerts on enrollment |
 
-### Example: enroll a student
+## Troubleshooting
 
-```bash
-curl -X POST http://localhost:8080/api/enrollments \
-  -H 'Content-Type: application/json' \
-  -d '{"studentId":1,"classId":2}'
-```
+| Problem | Solution |
+|---------|----------|
+| `Couldn't connect to server` on port 8080 | The application is not running. Start it with `docker compose -f docker/docker-compose.yml up --build` or `mvn spring-boot:run`. |
+| `Cannot connect to the Docker daemon` | Start Docker Desktop and wait until it is ready. |
+| `409 Conflict: Student is already enrolled` | The enrollment already exists. Try a different `studentId`/`classId` pair, e.g. `{"studentId":3,"classId":1}`. |
+| `curl: URL rejected: Malformed input` | Run each `curl` command separately. Do not paste API response JSON on the same line as a `curl` command. |
+| Maven build fails on database | For tests, just run `mvn verify` (uses H2). For `spring-boot:run`, ensure PostgreSQL is running. |
 
-## Intended evolution (book chapters)
+## Architecture (for curious readers)
 
-| Stage | Location | Topics |
-|-------|----------|--------|
-| 1. Baseline monolith | `monolith-baseline/` | Domain model, coupling, shared DB |
-| 2. Containerization | `docker/` | Dockerfile, compose, externalized config |
-| 3. Observability | `monolith-baseline/` config | Actuator, structured logging, metrics |
-| 4. Kubernetes | `k8s/` | Deployments, probes, ConfigMap, Secret |
-| 5. Service extraction | `services/` | Strangler Fig, bounded contexts |
-| 6. API gateway | `gateway/` | Routing, progressive cutover |
-| 7. CI/CD | `.github/workflows/` | Build, test, image pipeline |
+The baseline monolith has intentional architectural tensions that later chapters address:
 
-See [docs/architecture.md](docs/architecture.md) and [docs/evolution-roadmap.md](docs/evolution-roadmap.md).
+- **Shared database** — all modules use one PostgreSQL schema
+- **Cross-domain calls** — enrollment and attendance call the notification service directly
+- **Extraction candidates** — notifications and attendance are designed to become separate services
+
+See [docs/architecture.md](docs/architecture.md) for the full picture.
+
+## Prerequisites summary
+
+| Tool | Version | Required for |
+|------|---------|--------------|
+| Java | 21 | Building and running the monolith |
+| Maven | 3.9+ | Build and tests |
+| Docker Desktop | latest | Recommended local setup |
+| PostgreSQL | 16+ | Only if running without Docker |
+| curl | any | API examples in the book |
 
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+---
+
+**Author:** Stefanie Schlüter  
+**Publisher:** Orange Education / AVA®
