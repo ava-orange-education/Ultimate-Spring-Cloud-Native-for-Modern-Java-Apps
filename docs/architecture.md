@@ -1,8 +1,8 @@
 # CampusFlow Architecture
 
-CampusFlow is a compact Spring Boot monolith that models a plausible internal school administration application — good enough to be realistic, small enough to teach from.
+CampusFlow is a compact Spring Boot monolith for a school administration domain — realistic enough to teach from, small enough to understand in one sitting.
 
-## Current structure (monolith baseline)
+## Application structure
 
 ```
 com.campusflow
@@ -12,100 +12,70 @@ com.campusflow
 ├── schoolclass/      # Classes and terms
 ├── enrollment/       # Registration workflow
 ├── attendance/       # Attendance tracking
-└── notification/     # Outbound messaging (in-process today)
+└── notification/     # Enrollment confirmations and absence alerts
 ```
 
-Each business area follows the same layering:
+Each module uses the same layering:
 
 ```
 controller → service → repository → entity
 ```
 
-All modules share **one PostgreSQL schema** managed by Flyway.
+All modules share **one PostgreSQL schema**, managed by Flyway in `monolith-baseline/src/main/resources/db/migration/`.
 
-## Bounded contexts (conceptual)
+## Business domains
 
-| Context | Aggregates | Notes |
-|---------|------------|-------|
-| Student Management | Student | Core master data |
-| Class Management | SchoolClass | Scheduling and capacity |
-| Enrollment | Enrollment | Links students to classes |
-| Attendance | AttendanceRecord | Operational daily data |
-| Notifications | Notification | Cross-cutting delivery |
+| Domain | Main entity | Responsibility |
+|--------|-------------|----------------|
+| Students | `Student` | Core master data |
+| Classes | `SchoolClass` | Scheduling and capacity |
+| Enrollment | `Enrollment` | Links students to classes |
+| Attendance | `AttendanceRecord` | Daily attendance records |
+| Notifications | `Notification` | Enrollment confirmations and absence alerts |
 
-These are **logical** boundaries today. Physically, everything runs in one deployable JAR with one database.
+## Patterns the book modernizes
 
-## Architectural tensions (intentional, realistic)
+### Shared database
 
-### 1. Shared database schema
+All tables live in one PostgreSQL database. Foreign keys cross module boundaries — for example, `enrollments` references `students` and `classes`.
 
-All entities live in the same PostgreSQL database. Foreign keys cross context boundaries (`enrollments` references `students` and `classes`). This is typical of mature monoliths and motivates later discussions about:
-
-- shared database anti-pattern in microservices
-- strangler migrations with dual writes
-- read models and eventual consistency
-
-### 2. Cross-domain service dependencies
+### Cross-module dependencies
 
 ```
 EnrollmentService  → StudentService, SchoolClassService, NotificationService
 AttendanceService  → StudentService, SchoolClassService, EnrollmentRepository, NotificationService
 ```
 
-`AttendanceService` validates enrollment through `EnrollmentRepository` directly — a subtle coupling that mirrors real codebases where teams shortcut through data access layers.
+`AttendanceService` validates enrollment through `EnrollmentRepository` directly — a common shortcut in mature monoliths.
 
-### 3. Synchronous notification calls
+### Synchronous notification calls
 
-Enrollment and attendance trigger notifications in the same transaction path. This is a natural seam for:
+Enrollment and attendance invoke `NotificationService` in the same request. Later chapters cover asynchronous messaging and service extraction.
 
-- async messaging
-- extracting the notification service
-- resilience patterns (timeouts, circuit breakers)
+### Externalized configuration
 
-### 4. Centralized configuration
+Settings in `application.yml` are overridden by environment variables. Kubernetes chapters move these to ConfigMaps and Secrets (`k8s/configmap.yaml`, `k8s/secret.example.yaml`).
 
-`application.yml` plus environment variables control feature flags and integration settings. Later chapters can move these to ConfigMaps, Spring Cloud Config, or external secret stores.
+## Extraction boundaries
 
-## Extraction candidates
+| Module | Monolith code | Companion guide |
+|--------|---------------|-----------------|
+| Notifications | `monolith-baseline/src/main/java/com/campusflow/notification/` | `services/notification-service/README.md` |
+| Attendance | `monolith-baseline/src/main/java/com/campusflow/attendance/` | `services/attendance-service/README.md` |
+| API routing | Monolith controllers | `gateway/README.md` |
 
-### Primary: Notification service
+The `services/` and `gateway/` folders contain guides and examples for later chapters — not standalone running services.
 
-**Why:** narrow responsibility, own table, called from multiple domains, no complex queries across foreign keys for writes.
-
-**Seam:** replace `NotificationService` method calls with HTTP or message publishing.
-
-### Secondary: Attendance service
-
-**Why:** distinct operational workflow, clear API (`GET/POST /api/attendance`), still needs student/class/enrollment data.
-
-**Seam:** gateway routes `/api/attendance/**` to the new service; monolith keeps authoritative enrollment data initially.
-
-### Gateway candidate
-
-A Spring Cloud Gateway can sit in front of the monolith and progressively route extracted paths. See `gateway/README.md`.
-
-## Why this is a good migration teaching example
-
-| Property | Teaching value |
-|----------|----------------|
-| Small but non-trivial domain | Enough coupling to matter, not overwhelming |
-| Familiar CRUD + workflow | Readers focus on architecture, not exotic logic |
-| Clear bounded contexts | Supports DDD and Strangler Fig narratives |
-| Actuator-ready | Health, metrics, probes without extra setup |
-| Flyway migrations | Schema evolution and deployment ordering |
-| Feature flags | Safe progressive rollout stories |
-| Docker + K8s manifests | Lift-and-shift and cloud-native deployment |
-
-## Data model (simplified)
+## Data model
 
 ```
 students ──┬── enrollments ──┬── classes
            │                 │
            └── attendance_records
-notifications (standalone table, logical outbound boundary)
+notifications (standalone table)
 ```
 
-## Deployment view (baseline)
+## Current deployment
 
 ```
 [ Client ]
@@ -117,7 +87,7 @@ notifications (standalone table, logical outbound boundary)
 [ PostgreSQL ]
 ```
 
-## Target view (later chapters)
+## Target architecture (Ch. 11–14)
 
 ```
 [ Client ]
@@ -129,7 +99,7 @@ notifications (standalone table, logical outbound boundary)
 [ Monolith ] [ Attendance ] [ Notifications ]
     |            |                |
     v            v                v
-[ PostgreSQL ] [ DB? ]         [ DB? ]
+[ PostgreSQL ] [ own DB ]     [ own DB ]
 ```
 
-The book can compare shared-database extraction vs database-per-service using the same codebase.
+The book uses CampusFlow to compare shared-database migration with database-per-service approaches.
