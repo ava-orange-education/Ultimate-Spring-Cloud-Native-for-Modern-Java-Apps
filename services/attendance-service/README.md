@@ -1,26 +1,27 @@
-# Attendance Service (extraction candidate)
+# Attendance Service
 
-This folder is reserved for extracting the **attendance** bounded context.
+Companion material for the book chapter on extracting the **attendance** module from the monolith.
 
-## Why attendance is a second candidate
+## Monolith starting point
 
-- Reads student and class data but owns attendance records
-- Cross-domain validation against enrollments
-- Triggers notifications on absence
-- Good example for database-per-service vs shared-database discussions
+- `monolith-baseline/src/main/java/com/campusflow/attendance/service/AttendanceService.java`
+- `monolith-baseline/src/main/java/com/campusflow/attendance/controller/AttendanceController.java`
 
-## Planned API surface
+## API surface in the monolith
 
 ```
 GET  /api/attendance?classId=&date=
 POST /api/attendance
 ```
 
-## Strangler Fig routing example (future)
+## Try it
 
-```
-/api/attendance/**  -> attendance-service
-/api/**             -> campusflow-monolith
+```bash
+curl "http://localhost:8080/api/attendance?classId=1&date=2026-07-14"
+
+curl -X POST http://localhost:8080/api/attendance \
+  -H 'Content-Type: application/json' \
+  -d '{"studentId":1,"classId":1,"date":"2026-07-14","status":"PRESENT"}'
 ```
 
-See `gateway/README.md` for the Spring Cloud Gateway chapter scaffold.
+When attendance is extracted, the API gateway routes `/api/attendance/**` as described in `gateway/README.md`.

@@ -1,34 +1,37 @@
-# API Gateway (future chapter)
+# API Gateway
 
-This folder is reserved for a **Spring Cloud Gateway** that supports the Strangler Fig migration.
+Companion material for the book chapter on the **Strangler Fig** pattern and API gateway routing.
 
-## Intended responsibilities
+## Routing model
 
-- Route `/api/attendance/**` to the extracted attendance service
-- Route `/api/notifications/**` to the extracted notification service
-- Forward remaining `/api/**` traffic to the monolith
-- Centralize cross-cutting concerns (correlation IDs, rate limiting demos)
+| Path | Target |
+|------|--------|
+| `/api/notifications/**` | Notification service |
+| `/api/attendance/**` | Attendance service |
+| `/api/**` | Monolith |
 
-## Example route configuration (to be implemented)
+## Example configuration
 
 ```yaml
 spring:
   cloud:
     gateway:
       routes:
+        - id: notification-service
+          uri: http://notification-service:8081
+          predicates:
+            - Path=/api/notifications/**
         - id: attendance-service
-          uri: http://attendance-service:8080
+          uri: http://attendance-service:8082
           predicates:
             - Path=/api/attendance/**
-        - id: monolith-fallback
+        - id: monolith
           uri: http://campusflow-monolith:8080
           predicates:
             - Path=/api/**
 ```
 
-## Book chapter topics
+## Monolith APIs referenced
 
-- Edge routing during incremental extraction
-- Feature-flagged cutover
-- Health-aware load balancing
-- Observability at the gateway
+- `monolith-baseline/src/main/java/com/campusflow/notification/controller/NotificationController.java`
+- `monolith-baseline/src/main/java/com/campusflow/attendance/controller/AttendanceController.java`
