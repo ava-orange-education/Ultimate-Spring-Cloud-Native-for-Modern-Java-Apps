@@ -101,8 +101,8 @@ Alex and Jordan are pre-enrolled in Algebra I. Use these IDs in the book's examp
 ├── monolith-baseline/     ← Start here: the Spring Boot monolith
 ├── docker/                ← Containerization (Dockerfile, docker-compose)
 ├── k8s/                   ← Kubernetes manifests
-├── services/              ← Service extraction guides (Ch. 11)
-├── gateway/               ← Strangler Fig routing guide (Ch. 14)
+├── services/              ← Service boundary and extraction guides (Ch. 5, 14)
+├── gateway/               ← Spring Cloud Gateway routing guide (Ch. 7, 14)
 ├── docs/                  ← Architecture notes and chapter guides
 └── .github/workflows/     ← CI/CD pipeline example
 ```
