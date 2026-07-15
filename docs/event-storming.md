@@ -42,8 +42,9 @@ Notification ──► [Event] EnrollmentConfirmationSent
 | Element | CampusFlow anchor |
 |---------|-------------------|
 | Command | `POST /api/enrollments` → `EnrollmentService.enroll()` |
-| Event | Enrollment row persisted in `enrollments` table |
-| Policy | Feature flag `enrollment-confirmation` triggers `NotificationService.sendEnrollmentConfirmation()` |
+| Event | `StudentEnrolledInClassEvent` published via Spring Application Events |
+| Policy | `EnrollmentNotificationListener` reacts when feature flag `enrollment-confirmation` is enabled |
+| Code | `enrollment/event/StudentEnrolledInClassEvent.java`, `notification/listener/EnrollmentNotificationListener.java` |
 | Aggregate cluster | **Enrollment** — owns the student-class relationship |
 
 ### Process 2: Attendance recording
