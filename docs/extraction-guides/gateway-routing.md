@@ -1,8 +1,8 @@
-# API Gateway
+# Gateway Routing — Extraction Guide
 
-Companion guidance for Chapter 7 (Introducing Spring Cloud Components) and Chapter 14 (Strangler Fig routing).
+Companion guide for Chapter 7 (Introducing Spring Cloud Components) and Chapter 14 (Real-World Case Studies).
 
-This folder contains a **routing example only** — not a runnable Spring Cloud Gateway project.
+This document shows how an API gateway routes traffic during a Strangler Fig migration. It is **not** a runnable Spring Cloud Gateway project. The routing example illustrates target architecture described in the book.
 
 ## Routing model
 
@@ -37,3 +37,8 @@ spring:
 
 - `monolith-baseline/src/main/java/com/campusflow/notification/controller/NotificationController.java`
 - `monolith-baseline/src/main/java/com/campusflow/attendance/controller/AttendanceController.java`
+
+## Related guides
+
+- [notification-service.md](notification-service.md) — first extraction candidate
+- [attendance-service.md](attendance-service.md) — second extraction candidate

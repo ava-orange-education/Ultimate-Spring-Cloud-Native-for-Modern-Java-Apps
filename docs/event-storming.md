@@ -118,4 +118,4 @@ After mapping CampusFlow processes, three patterns typically emerge:
 
 3. **Change frequency** — Notification delivery channels change often (email, SMS, push). Enrollment rules change less often. Attendance policies may change per school term. Event Storming makes these different rates of change visible and supports splitting along those lines.
 
-Use the results alongside `docs/architecture.md` and the guides in `services/` when evaluating whether a boundary is working or needs refinement.
+Use the results alongside `docs/architecture.md` and the guides in `docs/extraction-guides/` when evaluating whether a boundary is working or needs refinement.
