@@ -98,7 +98,7 @@ Attendance still calls `NotificationService` directly for absence alerts. That c
 | **Attendance** | Own workflow but depends on enrollment validation | Second candidate; more coordination required |
 | **Students, Classes, Enrollment** | Master data and core workflow glue | Keep in core monolith initially |
 
-Companion guides: `services/notification-service/README.md`, `services/attendance-service/README.md`
+Companion guides: `docs/extraction-guides/notification-service.md`, `docs/extraction-guides/attendance-service.md`
 
 ## From monolith to services
 
@@ -106,7 +106,7 @@ Companion guides: `services/notification-service/README.md`, `services/attendanc
 |-------|------------|
 | **Structured monolith** | Current — domain packages, shared DB, mixed coupling (events + direct calls) |
 | **Modular monolith** | Book discusses stronger internal boundaries before any service split |
-| **Extracted services** | Companion guides in `services/` and `gateway/` — not implemented as runnable services |
+| **Extracted services** | Companion guides in `docs/extraction-guides/` — not implemented as runnable services |
 
 ## Event Storming
 
@@ -150,4 +150,4 @@ Docker: `docker/` | Kubernetes: `k8s/` | CI: `.github/workflows/ci.yml`
 [ PostgreSQL ] [ own DB ]     [ own DB ]
 ```
 
-See `gateway/README.md` for routing examples.
+See `docs/extraction-guides/gateway-routing.md` for routing examples.
