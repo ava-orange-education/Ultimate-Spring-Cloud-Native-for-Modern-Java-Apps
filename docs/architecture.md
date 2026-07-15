@@ -1,8 +1,23 @@
 # CampusFlow Architecture
 
-CampusFlow is a compact Spring Boot monolith for school administration — realistic enough to teach from, small enough to understand in one sitting.
+CampusFlow is a compact Spring Boot monolith for school administration. The codebase is organized by domain modules inside one application and one database.
 
-The codebase is organized by **domain modules** (`student`, `schoolclass`, `enrollment`, `attendance`, `notification`). Each module follows the same layering:
+## Application structure
+
+```
+com.campusflow
+├── config/           # Externalized settings, feature flags, graceful shutdown
+├── common/           # Shared exception handling
+├── student/          # Student master data
+├── schoolclass/      # Classes and terms
+├── enrollment/       # Registration workflow and domain events
+├── attendance/       # Attendance tracking
+└── notification/     # Reacts to events; sends absence alerts
+```
+
+Each domain package includes a `package-info.java` that describes its responsibility and role in the monolith.
+
+Each module follows the same layering:
 
 ```
 controller → service → repository → entity
@@ -12,27 +27,24 @@ All modules share **one PostgreSQL schema**, managed by Flyway in `monolith-base
 
 ## Domain modules
 
-| Domain | Package | Main data | Business responsibility | Role in the monolith today |
-|--------|---------|-----------|----------------------|---------------------------|
-| **Students** | `student/` | `students` | Maintain student master data (name, email, status) | Core reference data used by enrollment and attendance |
-| **Classes** | `schoolclass/` | `classes` | Define courses, terms, capacity, and scheduling | Core reference data used by enrollment and attendance |
-| **Enrollment** | `enrollment/` | `enrollments` | Register students in classes; enforce capacity and eligibility | Workflow that links students and classes |
-| **Attendance** | `attendance/` | `attendance_records` | Record daily presence or absence per student and class | Operational workflow that depends on enrollment |
-| **Notifications** | `notification/` | `notifications` | Send enrollment confirmations and absence alerts | Side-effect handler invoked by other domains |
+| Domain | Package | Main data | Responsibility | Role in monolith |
+|--------|---------|-----------|----------------|------------------|
+| **Students** | `student/` | `students` | Student master data | Core reference data |
+| **Classes** | `schoolclass/` | `classes` | Courses, terms, capacity | Core reference data |
+| **Enrollment** | `enrollment/` | `enrollments` | Register students in classes | Coordination workflow; publishes domain events |
+| **Attendance** | `attendance/` | `attendance_records` | Daily presence/absence | Operational workflow; validates enrollment |
+| **Notifications** | `notification/` | `notifications` | Alerts and confirmations | Reacts to enrollment events; called by attendance |
 
 ### Dependencies between domains
 
-| Domain | Depends on | Why |
+| Domain | Depends on | How |
 |--------|------------|-----|
-| Enrollment | Students, Classes, Notifications | Needs student/class data to enroll; sends confirmation on success |
-| Attendance | Students, Classes, Enrollment, Notifications | Needs enrollment to validate eligibility; sends alert on absence |
-| Notifications | Students, Classes (via method parameters) | Receives student and class details from callers — no direct repository calls to other domains |
-| Students | — | No dependencies on other domain modules |
-| Classes | — | No dependencies on other domain modules |
+| Enrollment | Students, Classes | Service calls to load and validate data |
+| Attendance | Students, Classes, Enrollment | Service calls + direct `EnrollmentRepository` access |
+| Notifications | Enrollment (event) | `EnrollmentNotificationListener` handles `StudentEnrolledInClassEvent` |
+| Notifications | Attendance (direct) | `AttendanceService` calls `sendAbsenceAlert()` synchronously |
 
 ## Boundary map
-
-This map shows how the domains interact today. Solid lines are direct code dependencies; dashed lines are data relationships through the shared database.
 
 ```
                     ┌─────────────┐     ┌─────────────┐
@@ -43,100 +55,62 @@ This map shows how the domains interact today. Solid lines are direct code depen
                            └────────┬──────────┘
                                     │
                            ┌────────▼────────┐
-                           │   Enrollment    │──────► Notifications
-                           │   (workflow)    │        (side effect)
+                           │   Enrollment    │── publish ──► StudentEnrolledInClassEvent
+                           │  (workflow)     │
                            └────────┬────────┘
                                     │ enrollment check
                            ┌────────▼────────┐
-                           │   Attendance    │──────► Notifications
-                           │  (operational)  │        (side effect)
+                           │   Attendance    │──── direct call ──► NotificationService
+                           │  (operational)  │
                            └─────────────────┘
+
+         StudentEnrolledInClassEvent ──► EnrollmentNotificationListener ──► NotificationService
 ```
 
-| Interaction | Boundary strength | Notes |
-|-------------|-------------------|-------|
-| Students ↔ Classes | **Strong** (independent) | Separate master data; no direct code calls between them |
-| Enrollment → Students, Classes | **Moderate** | Workflow reads master data through service APIs |
-| Attendance → Enrollment | **Weak** | Attendance reaches into `EnrollmentRepository` directly — a typical monolith shortcut |
-| Enrollment/Attendance → Notifications | **Weak** | Synchronous in-process calls; notification failure would roll back the caller's transaction |
-| All domains → shared database | **No boundary** | Foreign keys cross module lines (`enrollments` references `students` and `classes`) |
+| Interaction | Boundary strength | Status |
+|-------------|-------------------|--------|
+| Students ↔ Classes | Strong (independent) | Implemented |
+| Enrollment → Students, Classes | Moderate | Implemented |
+| Enrollment → Notification | Weaker (event-based) | **Implemented** — Spring Application Events |
+| Attendance → Enrollment | Weak (repository shortcut) | Implemented |
+| Attendance → Notification | Weak (direct call) | Implemented — not yet event-based |
 
-## Coupling points
+## Domain events (implemented)
 
-These are the places where a future service split would need careful design.
+After a successful enrollment, `EnrollmentService` publishes `StudentEnrolledInClassEvent` via Spring's `ApplicationEventPublisher`.
 
-### Enrollment coordinates multiple domains
+`EnrollmentNotificationListener` in the notification package reacts to this event and sends a confirmation when the feature flag is enabled.
 
-When a student enrolls in a class, `EnrollmentService`:
+**Code:**
+- Event: `enrollment/event/StudentEnrolledInClassEvent.java`
+- Publisher: `enrollment/service/EnrollmentService.java`
+- Listener: `notification/listener/EnrollmentNotificationListener.java`
 
-1. Loads the student via `StudentService` and checks active status
-2. Loads the class via `SchoolClassService` and checks capacity
-3. Persists the enrollment
-4. Calls `NotificationService.sendEnrollmentConfirmation()` in the same transaction
+This stays within the monolith — no message broker. It demonstrates how domains can communicate through events instead of direct service calls, which supports Chapters 5 and 6.
 
-Enrollment is a **coordination point** — it owns the enrollment record but depends on student and class data to make decisions.
-
-### Attendance validates through enrollment
-
-When attendance is marked, `AttendanceService`:
-
-1. Loads student and class via their services
-2. Checks enrollment via `EnrollmentRepository.existsByStudentIdAndSchoolClassId()` — bypassing `EnrollmentService`
-3. Persists the attendance record
-4. Calls `NotificationService.sendAbsenceAlert()` when status is `ABSENT`
-
-Attendance does not own enrollment data but **requires** it to enforce the business rule that only enrolled students can be marked present or absent.
-
-### Notifications are invoked synchronously
-
-Both enrollment and attendance call `NotificationService` in the same HTTP request and database transaction. The notification module stores a record and logs the message (standing in for an external email provider).
-
-This coupling means:
-
-- Notification logic runs in the caller's transaction boundary
-- A notification failure blocks the enrollment or attendance operation
-- Notification has no independent lifecycle today
+Attendance still calls `NotificationService` directly for absence alerts. That coupling is intentional: it shows a realistic mixed state during gradual refactoring.
 
 ## Extraction seams
 
-Not every module is equally ready to become a separate service. The decision depends on cohesion, coupling, data ownership, change frequency, and risk.
+| Module | Why extract / keep | Assessment |
+|--------|-------------------|------------|
+| **Notifications** | Clear boundary, owns `notifications` table, already event-driven for enrollment | Strong first extraction candidate |
+| **Attendance** | Own workflow but depends on enrollment validation | Second candidate; more coordination required |
+| **Students, Classes, Enrollment** | Master data and core workflow glue | Keep in core monolith initially |
 
-### Strong candidates for early extraction
-
-| Module | Why extract | Cohesion | Coupling | Data ownership | Risk |
-|--------|-------------|----------|----------|----------------|------|
-| **Notifications** | Clear single purpose (send alerts); own table with no foreign keys; callers pass all needed data | High — one reason to change: how messages are sent | Low — receives data via method calls, does not query other tables | Owns `notifications` table completely | Low — extraction does not break enrollment or attendance logic if communication is decoupled |
-| **Attendance** | Distinct operational workflow with its own table and API | High — attendance rules change independently of enrollment rules | Medium — needs enrollment validation; calls notifications | Owns `attendance_records`; reads enrollment state | Medium — must solve "is student enrolled?" across a boundary |
-
-See `services/notification-service/README.md` and `services/attendance-service/README.md` for extraction guides.
-
-### Better kept together for now
-
-| Module | Why stay | Reasoning |
-|--------|----------|-----------|
-| **Students** | Master data hub | Referenced by enrollment and attendance; splitting early creates widespread read dependencies |
-| **Classes** | Master data hub | Same as students — small, stable, heavily referenced |
-| **Enrollment** | Core workflow glue | Sits between master data and operational workflows; owns the relationship that attendance depends on |
-
-Extracting students or classes first would force every other module to make remote calls for basic reference data. Extracting enrollment before attendance would leave attendance without a local enrollment check.
-
-A practical order: **notifications first**, then **attendance**, while students/classes/enrollment remain in the core monolith.
+Companion guides: `services/notification-service/README.md`, `services/attendance-service/README.md`
 
 ## From monolith to services
 
-CampusFlow is designed as a progression:
-
-| Stage | What it looks like | CampusFlow today |
-|-------|-------------------|------------------|
-| **Structured monolith** | Domain modules with clear packages, but shared database and cross-module calls | Current state — see `monolith-baseline/src/main/java/com/campusflow/` |
-| **Modular monolith** | Stronger module boundaries, explicit APIs between domains, reduced shortcuts (e.g. no direct repository access across modules) | A refactoring step the book discusses before any service split |
-| **Extracted services** | Selected modules run independently with their own database and API | Target state for notifications and attendance — see `services/` and `gateway/` |
-
-The book uses this progression to show that good boundaries start inside the monolith, not only at deployment time.
+| Stage | CampusFlow |
+|-------|------------|
+| **Structured monolith** | Current — domain packages, shared DB, mixed coupling (events + direct calls) |
+| **Modular monolith** | Book discusses stronger internal boundaries before any service split |
+| **Extracted services** | Companion guides in `services/` and `gateway/` — not implemented as runnable services |
 
 ## Event Storming
 
-For a workshop-style walkthrough of CampusFlow processes and how they reveal bounded contexts, see [docs/event-storming.md](event-storming.md).
+See [docs/event-storming.md](event-storming.md) for a workshop walkthrough mapped to CampusFlow processes and code.
 
 ## Data model
 
@@ -144,10 +118,10 @@ For a workshop-style walkthrough of CampusFlow processes and how they reveal bou
 students ──┬── enrollments ──┬── classes
            │                 │
            └── attendance_records
-notifications (standalone — no foreign keys to other tables)
+notifications (standalone — no foreign keys)
 ```
 
-## Current deployment
+## Current deployment (implemented)
 
 ```
 [ Client ]
@@ -159,7 +133,9 @@ notifications (standalone — no foreign keys to other tables)
 [ PostgreSQL ]
 ```
 
-## Target architecture (later chapters)
+Docker: `docker/` | Kubernetes: `k8s/` | CI: `.github/workflows/ci.yml`
+
+## Target architecture (companion guidance — not implemented)
 
 ```
 [ Client ]
@@ -174,4 +150,4 @@ notifications (standalone — no foreign keys to other tables)
 [ PostgreSQL ] [ own DB ]     [ own DB ]
 ```
 
-The `services/` and `gateway/` folders contain companion guides for this evolution — not standalone running services yet.
+See `gateway/README.md` for routing examples.

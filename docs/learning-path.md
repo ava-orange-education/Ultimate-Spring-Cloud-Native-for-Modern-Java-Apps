@@ -12,8 +12,8 @@ All material is on the `main` branch. Use the table below to find what to open a
 | 2 | Understanding Monolithic Architectures | `monolith-baseline/`, `docs/architecture.md` | The baseline monolith, shared database, and cross-module coupling |
 | 3 | Cloud-Native Migration | `monolith-baseline/`, `docs/architecture.md` | Migration starting point and approaches: lift-and-shift, re-platform, re-architect, Strangler Fig |
 | 4 | Principles of Cloud Native Applications | `monolith-baseline/src/main/resources/application.yml` | Externalized config, port binding, backing services, disposability |
-| 5 | Identifying Microservice Boundaries | `docs/architecture.md`, `docs/event-storming.md`, `services/` | Domain modules, boundary map, Event Storming walkthrough, extraction guides |
-| 6 | Refactoring Strategies with Spring Boot | `monolith-baseline/src/main/java/com/campusflow/` | Module layout, feature flags in `monolith-baseline/.../config/AppProperties.java` |
+| 5 | Identifying Microservice Boundaries | `docs/architecture.md`, `docs/event-storming.md`, `services/`, `monolith-baseline/.../package-info.java` | Domain modules, boundary map, Event Storming walkthrough, extraction guides |
+| 6 | Refactoring Strategies with Spring Boot | `monolith-baseline/src/main/java/com/campusflow/`, `enrollment/event/` | Module layout, domain events, feature flags in `config/AppProperties.java` |
 | 7 | Introducing Spring Cloud Components | `gateway/README.md` | Spring Cloud Gateway routing example (companion guide, not a runnable service) |
 | 8 | Containerizing Java Applications with Docker | `docker/` | Multi-stage `Dockerfile`, `docker-compose.yml` |
 | 9 | Orchestrating Cloud-Native Applications with Kubernetes | `k8s/` | Deployment, Service, ConfigMap, Secret example, probes |
@@ -37,6 +37,7 @@ All material is on the `main` branch. Use the table below to find what to open a
 | Topic | In this repository | Covered primarily in the book |
 |-------|-------------------|------------------------------|
 | Monolith, REST API, Flyway, feature flags | Yes — `monolith-baseline/` | Ch. 2–6 |
+| Domain events (Spring Application Events) | Yes — `StudentEnrolledInClassEvent`, `EnrollmentNotificationListener` | Ch. 5–6 |
 | Microservice boundaries, Event Storming | Yes — `docs/architecture.md`, `docs/event-storming.md` | Ch. 5 |
 | Service extraction guides | Yes — `services/` (guides, not full services) | Ch. 5, 14 |
 | Spring Cloud Gateway routing example | Yes — `gateway/` (guide only) | Ch. 7 |

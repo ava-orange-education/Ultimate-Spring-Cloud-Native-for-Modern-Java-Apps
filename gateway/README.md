@@ -1,6 +1,8 @@
 # API Gateway
 
-Companion material for the book chapter on the **Strangler Fig** pattern and API gateway routing.
+Companion guidance for Chapter 7 (Introducing Spring Cloud Components) and Chapter 14 (Strangler Fig routing).
+
+This folder contains a **routing example only** — not a runnable Spring Cloud Gateway project.
 
 ## Routing model
 

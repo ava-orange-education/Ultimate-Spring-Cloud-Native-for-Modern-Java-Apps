@@ -1,6 +1,7 @@
 package com.campusflow.notification.service;
 
 import com.campusflow.config.AppProperties;
+import com.campusflow.enrollment.event.StudentEnrolledInClassEvent;
 import com.campusflow.notification.entity.Notification;
 import com.campusflow.notification.entity.NotificationStatus;
 import com.campusflow.notification.entity.NotificationType;
@@ -16,7 +17,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Sends and stores notifications. Called synchronously by enrollment and attendance.
+ * Sends and stores notifications. Enrollment confirmations are triggered by domain events;
+ * absence alerts are still called directly from attendance.
  */
 @Service
 @Transactional
@@ -37,11 +39,11 @@ public class NotificationService {
         return notificationRepository.findAll();
     }
 
-    public void sendEnrollmentConfirmation(Student student, SchoolClass schoolClass) {
-        String subject = "Enrollment confirmed: " + schoolClass.getName();
-        String body = "Hello " + student.getFirstName() + ", you are enrolled in "
-                + schoolClass.getName() + " for " + schoolClass.getTerm() + ".";
-        dispatch(student.getEmail(), subject, body, NotificationType.ENROLLMENT_CONFIRMATION);
+    public void handleStudentEnrolled(StudentEnrolledInClassEvent event) {
+        String subject = "Enrollment confirmed: " + event.className();
+        String body = "Hello " + event.studentFirstName() + ", you are enrolled in "
+                + event.className() + " for " + event.classTerm() + ".";
+        dispatch(event.studentEmail(), subject, body, NotificationType.ENROLLMENT_CONFIRMATION);
     }
 
     public void sendAbsenceAlert(Student student, SchoolClass schoolClass, LocalDate date) {
