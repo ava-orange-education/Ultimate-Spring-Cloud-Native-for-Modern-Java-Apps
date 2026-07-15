@@ -18,7 +18,7 @@ CampusFlow is a small school administration system built with Spring Boot. You s
 
 The baseline is intentionally monolithic: one application, one database, and some cross-module coupling — exactly the kind of system teams modernize in real life.
 
-The `services/` and `gateway/` folders are **companion guides** for later chapters. They point to monolith code and show extraction and routing patterns — they are not standalone runnable services.
+The `docs/extraction-guides/` folder contains **companion guides** for service extraction and gateway routing. These are documentation only — not runnable services or deployables.
 
 ## Quick start (5 minutes)
 
@@ -101,9 +101,8 @@ Alex and Jordan are pre-enrolled in Algebra I. Use these IDs in the book's examp
 ├── monolith-baseline/     ← Start here: the Spring Boot monolith
 ├── docker/                ← Containerization (Dockerfile, docker-compose)
 ├── k8s/                   ← Kubernetes manifests
-├── services/              ← Service boundary and extraction guides (Ch. 5, 14)
-├── gateway/               ← Spring Cloud Gateway routing guide (Ch. 7, 14)
-├── docs/                  ← Architecture notes and chapter guides
+├── docs/                  ← Architecture notes, chapter guides, extraction guides
+│   └── extraction-guides/ ← Companion guides for service extraction and gateway routing
 └── .github/workflows/     ← CI/CD pipeline example
 ```
 
@@ -128,8 +127,8 @@ Each chapter builds on the previous one. Use this table to find the code discuss
 | ConfigMaps and Secrets | `k8s/configmap.yaml`, `k8s/secret.example.yaml` |
 | Readiness and liveness probes | `k8s/deployment.yaml` |
 | CI/CD pipeline | `.github/workflows/ci.yml` |
-| Service extraction guides | `services/notification-service/`, `services/attendance-service/` |
-| Strangler Fig gateway routing | `gateway/` |
+| Service extraction guides | `docs/extraction-guides/notification-service.md`, `docs/extraction-guides/attendance-service.md` |
+| Strangler Fig gateway routing | `docs/extraction-guides/gateway-routing.md` |
 
 For the chapter-by-chapter guide (Ch. 1–14), see [docs/learning-path.md](docs/learning-path.md).
 
