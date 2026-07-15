@@ -24,20 +24,30 @@ Sending happens internally — enrollment and attendance call `NotificationServi
 |--------|------------|
 | **Cohesion** | Single purpose: compose and deliver messages |
 | **Data ownership** | Owns `notifications` table; no foreign keys to other tables |
-| **Coupling** | Callers pass `Student` and `SchoolClass` objects — no cross-domain repository access |
+| **Coupling** | Enrollment via domain event; attendance via direct call | Event listener receives data from `StudentEnrolledInClassEvent` — no cross-domain repository access |
 | **Change frequency** | Delivery channel, templates, and retry logic change independently of enrollment or attendance rules |
 | **Risk** | Low — extracting notifications does not break core enrollment or attendance workflows if communication is decoupled |
 
 ## Dependencies today
 
+**Enrollment → Notification (event-based, implemented):**
+
 ```
-EnrollmentService  ──► NotificationService.sendEnrollmentConfirmation()
+EnrollmentService  ── publish ──► StudentEnrolledInClassEvent
+                                        │
+                                        ▼
+                          EnrollmentNotificationListener  ──► NotificationService
+```
+
+**Attendance → Notification (direct call, implemented):**
+
+```
 AttendanceService  ──► NotificationService.sendAbsenceAlert()
 ```
 
-Both calls are **synchronous** and run inside the caller's database transaction. If notification dispatch fails, the enrollment or attendance operation rolls back.
+Enrollment no longer calls `NotificationService` directly. The listener runs synchronously in the same application — still in-process, but decoupled through a domain event.
 
-NotificationService receives student email and class name through method parameters. It does not query `students`, `classes`, `enrollments`, or `attendance_records` tables.
+Absence alerts still use a direct service call. That mixed state is intentional: it shows gradual refactoring in progress.
 
 ## What extraction would improve
 

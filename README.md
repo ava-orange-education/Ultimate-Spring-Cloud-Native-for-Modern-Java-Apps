@@ -116,6 +116,7 @@ Each chapter builds on the previous one. Use this table to find the code discuss
 | Monolith structure and domain model | `monolith-baseline/src/main/java/com/campusflow/` |
 | REST API and validation | `*/controller/`, `*/dto/` packages |
 | Shared database and coupling | `docs/architecture.md` |
+| Domain events and boundaries | `enrollment/event/`, `notification/listener/`, `docs/event-storming.md` |
 | Externalized configuration | `monolith-baseline/src/main/resources/application.yml` |
 | Feature flags | `monolith-baseline/src/main/java/com/campusflow/config/AppProperties.java` |
 | Database migrations (Flyway) | `monolith-baseline/src/main/resources/db/migration/` |

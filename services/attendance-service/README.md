@@ -36,8 +36,10 @@ AttendanceService
     ├── StudentService.getStudent()           (read master data)
     ├── SchoolClassService.getSchoolClass()   (read master data)
     ├── EnrollmentRepository.exists...()      (validate enrollment — direct repository access)
-    └── NotificationService.sendAbsenceAlert() (side effect on absence)
+    └── NotificationService.sendAbsenceAlert() (direct call — not yet event-based)
 ```
+
+Enrollment already decouples from notifications through `StudentEnrolledInClassEvent`. Attendance still uses a direct call for absence alerts — a realistic next refactoring step.
 
 The enrollment check bypasses `EnrollmentService` and queries `EnrollmentRepository` directly. This is a common monolith shortcut that becomes a **cross-service contract** after extraction.
 
@@ -77,7 +79,7 @@ Both options add complexity that notification extraction does not face.
 A practical sequence:
 
 1. **Strengthen the monolith boundary first** — replace `EnrollmentRepository` access with a call to `EnrollmentService` (or a dedicated enrollment query API within the monolith)
-2. **Extract notifications** — remove the synchronous notification call from attendance by switching to events or async messaging
+2. **Extract notifications** — enrollment already uses domain events; attendance still calls directly. Replace the absence call with an event before routing traffic through a gateway.
 3. **Extract attendance** — deploy as a service with its own `attendance_records` database
 4. **Define enrollment check contract** — attendance calls `GET /api/enrollments/exists?studentId=&classId=` or consumes `StudentEnrolledInClass` / `StudentUnenrolledFromClass` events
 5. **Route through gateway** — `gateway/README.md` shows `/api/attendance/**` routing to the new service
