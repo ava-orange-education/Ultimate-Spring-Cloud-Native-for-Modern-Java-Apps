@@ -28,7 +28,7 @@ Attendance has clear domain cohesion — it owns attendance records and rules ab
 |--------|------------|
 | **Cohesion** | High — attendance rules and data are self-contained |
 | **Data ownership** | Owns `attendance_records`; does not own enrollment data |
-| **Coupling** | Medium — reads enrollment via `EnrollmentRepository` directly; calls `NotificationService` synchronously |
+| **Coupling** | Medium — enrollment check goes through `EnrollmentVerification`; absence alerts call `NotificationService` directly |
 | **Change frequency** | Attendance policies (grace periods, excused absences) may evolve independently of enrollment |
 | **Risk** | Medium — incorrect enrollment checks across a service boundary allow invalid records |
 
@@ -36,15 +36,17 @@ Attendance has clear domain cohesion — it owns attendance records and rules ab
 
 ```
 AttendanceService
-    ├── StudentService.getStudent()           (read master data)
-    ├── SchoolClassService.getSchoolClass()   (read master data)
-    ├── EnrollmentRepository.exists...()      (validate enrollment — direct repository access)
-    └── NotificationService.sendAbsenceAlert() (direct call — not yet event-based)
+    ├── StudentService.getStudent()              (read master data)
+    ├── SchoolClassService.getSchoolClass()      (read master data)
+    ├── EnrollmentVerification.isEnrolled()      (enrollment check — behind an interface)
+    └── NotificationService.sendAbsenceAlert()   (direct call — not yet event-based)
 ```
 
-Enrollment already decouples from notifications through `StudentEnrolledInClassEvent`. Attendance still uses a direct call for absence alerts — the next refactoring step in the monolith.
+The enrollment check is now behind the `EnrollmentVerification` interface rather than going directly to `EnrollmentRepository`. The current implementation (`LocalEnrollmentVerification`) delegates to the repository within the same application, so no behaviour changes. The seam means that `AttendanceService` no longer depends on persistence details of another module.
 
-The enrollment check bypasses `EnrollmentService` and queries `EnrollmentRepository` directly. This is a common monolith shortcut that becomes a **cross-service contract** after extraction.
+A future implementation of `EnrollmentVerification` could call a REST endpoint, consume a replicated read model, or react to enrollment events — without changing `AttendanceService`.
+
+Absence alerts still use a direct service call. That is the next boundary to address, using the same approach already applied to enrollment confirmations.
 
 ## Data and consistency questions
 
@@ -81,7 +83,7 @@ Both options add complexity that notification extraction does not face.
 
 A practical sequence:
 
-1. **Strengthen the monolith boundary first** — replace `EnrollmentRepository` access with a call to `EnrollmentService` (or a dedicated enrollment query API within the monolith)
+1. ~~**Strengthen the monolith boundary first**~~ — **done.** `AttendanceService` now depends on `EnrollmentVerification`, not on `EnrollmentRepository` directly. `LocalEnrollmentVerification` is the current adapter.
 2. **Extract notifications** — enrollment already uses domain events; attendance still calls directly. Replace the absence call with an event before routing traffic through a gateway.
 3. **Extract attendance** — deploy as a service with its own `attendance_records` database
 4. **Define enrollment check contract** — attendance calls `GET /api/enrollments/exists?studentId=&classId=` or consumes enrollment events
