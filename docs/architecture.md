@@ -40,7 +40,7 @@ All modules share **one PostgreSQL schema**, managed by Flyway in `monolith-base
 | Domain | Depends on | How |
 |--------|------------|-----|
 | Enrollment | Students, Classes | Service calls to load and validate data |
-| Attendance | Students, Classes, Enrollment | Service calls + direct `EnrollmentRepository` access |
+| Attendance | Students, Classes, Enrollment | Service calls + `EnrollmentVerification` interface (backed locally by `LocalEnrollmentVerification`) |
 | Notifications | Enrollment (event) | `EnrollmentNotificationListener` handles `StudentEnrolledInClassEvent` |
 | Notifications | Attendance (direct) | `AttendanceService` calls `sendAbsenceAlert()` synchronously |
 
@@ -72,8 +72,25 @@ All modules share **one PostgreSQL schema**, managed by Flyway in `monolith-base
 | Students ↔ Classes | Strong (independent) | Implemented |
 | Enrollment → Students, Classes | Moderate | Implemented |
 | Enrollment → Notification | Weaker (event-based) | **Implemented** — Spring Application Events |
-| Attendance → Enrollment | Weak (repository shortcut) | Implemented |
+| Attendance → Enrollment | Stable (interface seam) | **Improved** — `EnrollmentVerification` interface; `LocalEnrollmentVerification` adapts locally |
 | Attendance → Notification | Weak (direct call) | Implemented — not yet event-based |
+
+## Architectural seam: EnrollmentVerification (implemented)
+
+`AttendanceService` previously called `EnrollmentRepository` directly to verify enrollment. This crossed a module boundary at the persistence layer.
+
+The seam introduces:
+
+- **`EnrollmentVerification`** — an interface in the `enrollment` package that expresses the business question: _is this student enrolled in this class?_
+- **`LocalEnrollmentVerification`** — an adapter in the same package that delegates to `EnrollmentRepository`. Behaviour is unchanged.
+
+`AttendanceService` now depends on `EnrollmentVerification` only. A future adapter could call a REST endpoint, consume a replicated read model, or react to enrollment events — with no changes to `AttendanceService`.
+
+**Code:**
+
+- Interface: `enrollment/EnrollmentVerification.java`
+- Adapter: `enrollment/LocalEnrollmentVerification.java`
+- Consumer: `attendance/service/AttendanceService.java`
 
 ## Domain events (implemented)
 
