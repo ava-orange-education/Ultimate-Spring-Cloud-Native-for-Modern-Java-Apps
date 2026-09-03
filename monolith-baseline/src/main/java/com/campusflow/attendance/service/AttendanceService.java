@@ -7,7 +7,7 @@ import com.campusflow.attendance.entity.AttendanceStatus;
 import com.campusflow.attendance.repository.AttendanceRecordRepository;
 import com.campusflow.common.exception.BusinessRuleException;
 import com.campusflow.config.AppProperties;
-import com.campusflow.enrollment.repository.EnrollmentRepository;
+import com.campusflow.enrollment.EnrollmentVerification;
 import com.campusflow.notification.service.NotificationService;
 import com.campusflow.schoolclass.entity.SchoolClass;
 import com.campusflow.schoolclass.service.SchoolClassService;
@@ -28,7 +28,7 @@ import java.util.List;
 public class AttendanceService {
 
     private final AttendanceRecordRepository attendanceRecordRepository;
-    private final EnrollmentRepository enrollmentRepository;
+    private final EnrollmentVerification enrollmentVerification;
     private final StudentService studentService;
     private final SchoolClassService schoolClassService;
     private final NotificationService notificationService;
@@ -36,13 +36,13 @@ public class AttendanceService {
 
     public AttendanceService(
             AttendanceRecordRepository attendanceRecordRepository,
-            EnrollmentRepository enrollmentRepository,
+            EnrollmentVerification enrollmentVerification,
             StudentService studentService,
             SchoolClassService schoolClassService,
             NotificationService notificationService,
             AppProperties appProperties) {
         this.attendanceRecordRepository = attendanceRecordRepository;
-        this.enrollmentRepository = enrollmentRepository;
+        this.enrollmentVerification = enrollmentVerification;
         this.studentService = studentService;
         this.schoolClassService = schoolClassService;
         this.notificationService = notificationService;
@@ -60,7 +60,7 @@ public class AttendanceService {
         Student student = studentService.getStudent(request.studentId());
         SchoolClass schoolClass = schoolClassService.getSchoolClass(request.classId());
 
-        if (!enrollmentRepository.existsByStudentIdAndSchoolClassId(request.studentId(), request.classId())) {
+        if (!enrollmentVerification.isEnrolled(request.studentId(), request.classId())) {
             throw new BusinessRuleException("Student is not enrolled in this class");
         }
 

@@ -106,7 +106,7 @@ Event Storming often reveals where language and responsibility diverge:
 ### Where boundaries are fuzzy
 
 - **Enrollment** and **Attendance** both use student and class identifiers but mean different things: enrollment establishes a relationship; attendance records a daily fact about that relationship.
-- **Attendance** currently reads enrollment data directly via `EnrollmentRepository` — event storming makes this dependency visible and raises the question: should attendance ask enrollment via an API instead?
+- **Attendance** depends on enrollment state through `EnrollmentVerification` — event storming makes this dependency visible and raises the question: after extraction, should that check become an API call, a read model, or an event-driven local view?
 
 ## How Event Storming helps with microservice boundaries
 
