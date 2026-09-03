@@ -42,11 +42,11 @@ AttendanceService
     └── NotificationService.sendAbsenceAlert()   (direct call — not yet event-based)
 ```
 
-The enrollment check is now behind the `EnrollmentVerification` interface rather than going directly to `EnrollmentRepository`. The current implementation (`LocalEnrollmentVerification`) delegates to the repository within the same application, so no behaviour changes. The seam means that `AttendanceService` no longer depends on persistence details of another module.
+Enrollment eligibility is checked through `EnrollmentVerification`. The local adapter `LocalEnrollmentVerification` answers that question via `EnrollmentRepository` inside the same application; `AttendanceService` does not depend on Enrollment persistence details.
 
-A future implementation of `EnrollmentVerification` could call a REST endpoint, consume a replicated read model, or react to enrollment events — without changing `AttendanceService`.
+A future adapter could call a REST endpoint, consume a replicated read model, or react to enrollment events — without changing `AttendanceService`.
 
-Absence alerts still use a direct service call. That is the next boundary to address, using the same approach already applied to enrollment confirmations.
+Absence alerts still use a direct `NotificationService` call. That is the next boundary to address, using the same event-based approach already applied to enrollment confirmations.
 
 ## Data and consistency questions
 
@@ -61,7 +61,7 @@ These questions are what Chapter 5 asks you to resolve before drawing service bo
 
 ## Why attendance needs more coordination than notifications
 
-Notifications receive all required data from callers and own their table completely. Attendance must **ask another domain a question** ("is this student enrolled?") before it can accept work. That question crosses a boundary that does not exist in the monolith today.
+Notifications receive all required data from callers and own their table completely. Attendance must **ask another domain a question** ("is this student enrolled?") before it can accept work. In the monolith that question already goes through `EnrollmentVerification`; after extraction it becomes a cross-service contract.
 
 Extracting attendance before solving this dependency would either:
 
