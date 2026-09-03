@@ -81,10 +81,10 @@ All modules share **one PostgreSQL schema**, managed by Flyway in `monolith-base
 
 The seam introduces:
 
-- **`EnrollmentVerification`** — an interface in the `enrollment` package that expresses the business question: _is this student enrolled in this class?_
+- **`EnrollmentVerification`** — an interface in the `enrollment` package that exposes Enrollment's verification capability: _is this student enrolled in this class?_
 - **`LocalEnrollmentVerification`** — an adapter in the same package that delegates to `EnrollmentRepository`. Behaviour is unchanged.
 
-`AttendanceService` now depends on `EnrollmentVerification` only. A future adapter could call a REST endpoint, consume a replicated read model, or react to enrollment events — with no changes to `AttendanceService`.
+`AttendanceService` depends on `EnrollmentVerification` only. A future adapter could call a REST endpoint, consume a replicated read model, or react to enrollment events — with no changes to `AttendanceService`.
 
 **Code:**
 

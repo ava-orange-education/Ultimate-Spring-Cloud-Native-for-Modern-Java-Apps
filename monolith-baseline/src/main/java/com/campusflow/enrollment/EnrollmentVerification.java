@@ -1,16 +1,15 @@
 package com.campusflow.enrollment;
 
 /**
- * Defines the enrollment verification capability as seen by the Attendance domain.
+ * Defines the enrollment verification capability exposed by the Enrollment domain.
  *
- * <p>Attendance needs to know whether a student is enrolled in a class before recording
- * presence or absence. How that information is obtained is intentionally hidden behind
- * this interface so that the Attendance module does not depend on persistence details
- * of the Enrollment module.
+ * <p>Consumers (for example Attendance) can ask whether a student is enrolled in a class
+ * without depending on Enrollment persistence details. How the answer is obtained stays
+ * behind this interface.
  *
  * <p>The current implementation delegates to a local repository. A future implementation
  * could call a REST endpoint, consume a replicated read model, or subscribe to enrollment
- * events — none of which would require changes to {@code AttendanceService}.
+ * events — none of which would require changes to callers such as {@code AttendanceService}.
  */
 public interface EnrollmentVerification {
 
