@@ -150,21 +150,40 @@ notifications (standalone — no foreign keys)
 [ PostgreSQL ]
 ```
 
-Docker: `docker/` | Kubernetes: `k8s/` | CI: `.github/workflows/ci.yml`
+Local configuration lives in `monolith-baseline/src/main/resources/application.yml` (environment overrides supported).
 
-## Target architecture (companion guidance — not implemented)
+Separately, a **minimal Spring Cloud Config Server** is runnable for Chapter 7. It uses the **native filesystem backend** and reads sample YAML from the local `config-repo/` folder in this repository:
 
 ```
-[ Client ]
-    |
-    v
-[ API Gateway ]
-    |        |              |
-    v        v              v
-[ Monolith ] [ Attendance ] [ Notifications ]
-    |            |                |
-    v            v                v
-[ PostgreSQL ] [ own DB ]     [ own DB ]
+[ config-repo/ folder ]
+          |
+          v
+[ Config Server :8888 ]
 ```
 
-See `docs/extraction-guides/gateway-routing.md` for routing examples.
+The monolith does **not** import Config Server by default. See `config-server/README.md` for how a future client would use `spring.config.import` (Config Data API). Vault, encryption, Config Server security, and live refresh are intentionally out of scope here.
+
+Docker: `docker/` | Kubernetes: `k8s/` | CI: `.github/workflows/ci.yml` | Config Server: `config-server/`
+
+## Target architecture (companion guidance — not fully implemented)
+
+```
+[ Git / Vault / managed backend ]
+               |
+               v
+       [ Config Server ]
+          /     |     \
+         v      v      v
+   [ Monolith ] [...] [...]
+          |             (future services)
+          v
+   [ PostgreSQL / own DBs ]
+```
+
+Data flow: a managed configuration backend (Git, Vault, etc. in production) feeds **Config Server**, which supplies configuration to applications on startup. Clients do **not** read Git or Vault directly.
+
+Config Server is **not** connected to PostgreSQL or the service databases.
+
+Today the companion uses the local `config-repo/` folder with the native backend — that is a teaching simplification, not the production architecture. Only the monolith and the standalone Config Server are implemented; Attendance, Notifications, and Gateway remain companion guidance. The monolith stays independent of Config Server until you opt in.
+
+See `docs/extraction-guides/gateway-routing.md` for routing examples and `config-server/README.md` for centralized configuration.
