@@ -42,5 +42,9 @@ jobs:
           CAMPUSFLOW_DB_PASSWORD: campusflow
         run: mvn -B verify
 
+      - name: Build and test config server
+        working-directory: config-server
+        run: mvn -B verify
+
       - name: Build Docker image
         run: docker build -f docker/Dockerfile -t campusflow/monolith:ci .

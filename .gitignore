@@ -27,3 +27,6 @@ logs/
 
 # Secrets (never commit real credentials)
 k8s/secret.yaml
+
+# Local Git metadata for the companion config repository (created by readers / tests)
+config-repo/.git/
