@@ -14,7 +14,7 @@ All material is on the `main` branch. Use the table below to find what to open a
 | 4 | Principles of Cloud Native Applications | `monolith-baseline/src/main/resources/application.yml`, `config-server/` | Externalized config in the monolith; Config Server as the next step for centralized config |
 | 5 | Identifying Microservice Boundaries | `docs/architecture.md`, `docs/event-storming.md`, `docs/extraction-guides/`, `monolith-baseline/.../package-info.java` | Domain modules, boundary map, Event Storming walkthrough, extraction guides |
 | 6 | Refactoring Strategies with Spring Boot | `monolith-baseline/src/main/java/com/campusflow/`, `enrollment/event/` | Module layout, domain events, feature flags in `config/AppProperties.java` |
-| 7 | Introducing Spring Cloud Components | `config-server/`, `config-repo/`, `docs/extraction-guides/gateway-routing.md` | Minimal Spring Cloud Config Server (Git backend) and Gateway routing guide |
+| 7 | Introducing Spring Cloud Components | `config-server/`, `config-repo/`, `docs/extraction-guides/gateway-routing.md` | Minimal Spring Cloud Config Server (native filesystem backend) and Gateway routing guide |
 | 8 | Containerizing Java Applications with Docker | `docker/` | Multi-stage `Dockerfile`, `docker-compose.yml` |
 | 9 | Orchestrating Cloud-Native Applications with Kubernetes | `k8s/` | Deployment, Service, ConfigMap, Secret example, probes |
 | 10 | Observability, Monitoring, and Logging | `monolith-baseline/src/main/resources/logback-spring.xml`, Actuator endpoints | Structured JSON logs, `/actuator/health`, `/actuator/metrics` |
@@ -40,7 +40,7 @@ All material is on the `main` branch. Use the table below to find what to open a
 | Domain events (Spring Application Events) | Yes — `StudentEnrolledInClassEvent`, `EnrollmentNotificationListener` | Ch. 5–6 |
 | Microservice boundaries, Event Storming | Yes — `docs/architecture.md`, `docs/event-storming.md` | Ch. 5 |
 | Service extraction guides | Yes — `docs/extraction-guides/` (companion documentation) | Ch. 5, 14 |
-| Spring Cloud Config Server | Yes — `config-server/` + `config-repo/` (minimal Git backend; monolith not wired by default) | Ch. 7 |
+| Spring Cloud Config Server | Yes — `config-server/` + `config-repo/` (minimal native filesystem backend; monolith not wired by default) | Ch. 7 |
 | Spring Cloud Gateway routing example | Yes — `docs/extraction-guides/gateway-routing.md` (companion documentation) | Ch. 7 |
 | Docker, Compose | Yes — `docker/` | Ch. 8 |
 | Kubernetes manifests, probes, ConfigMap/Secret | Yes — `k8s/` | Ch. 9 |

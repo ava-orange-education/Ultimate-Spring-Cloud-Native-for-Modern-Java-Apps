@@ -152,13 +152,13 @@ notifications (standalone — no foreign keys)
 
 Local configuration lives in `monolith-baseline/src/main/resources/application.yml` (environment overrides supported).
 
-Separately, a **minimal Spring Cloud Config Server** is runnable for Chapter 7:
+Separately, a **minimal Spring Cloud Config Server** is runnable for Chapter 7. It uses the **native filesystem backend** and reads sample YAML from the local `config-repo/` folder in this repository:
 
 ```
+[ config-repo/ folder ]
+          |
+          v
 [ Config Server :8888 ]
-         |
-         v
-[ Git: config-repo/ ]
 ```
 
 The monolith does **not** import Config Server by default. See `config-server/README.md` for how a future client would use `spring.config.import` (Config Data API). Vault, encryption, Config Server security, and live refresh are intentionally out of scope here.
@@ -168,24 +168,22 @@ Docker: `docker/` | Kubernetes: `k8s/` | CI: `.github/workflows/ci.yml` | Config
 ## Target architecture (companion guidance — not fully implemented)
 
 ```
-                         [ Config Server ]
-                                |
-                         [ Git config repo ]
-                                |
-              config on startup (Config Data API)
-                 /              |              \
-                v               v               v
-[ Client ] → [ API Gateway ]
-                |               |               |
-                v               v               v
-           [ Monolith ]  [ Attendance ]  [ Notifications ]
-                |               |               |
-                v               v               v
-           [ PostgreSQL ]   [ own DB ]      [ own DB ]
+[ Git / Vault / managed backend ]
+               |
+               v
+       [ Config Server ]
+          /     |     \
+         v      v      v
+   [ Monolith ] [...] [...]
+          |             (future services)
+          v
+   [ PostgreSQL / own DBs ]
 ```
 
-Config Server supplies configuration to applications. It is **not** connected to PostgreSQL or the service databases.
+Data flow: a managed configuration backend (Git, Vault, etc. in production) feeds **Config Server**, which supplies configuration to applications on startup. Clients do **not** read Git or Vault directly.
 
-Today only the monolith and the standalone Config Server are implemented; Attendance, Notifications, and Gateway remain companion guidance. The monolith stays independent of Config Server until you opt in.
+Config Server is **not** connected to PostgreSQL or the service databases.
+
+Today the companion uses the local `config-repo/` folder with the native backend — that is a teaching simplification, not the production architecture. Only the monolith and the standalone Config Server are implemented; Attendance, Notifications, and Gateway remain companion guidance. The monolith stays independent of Config Server until you opt in.
 
 See `docs/extraction-guides/gateway-routing.md` for routing examples and `config-server/README.md` for centralized configuration.

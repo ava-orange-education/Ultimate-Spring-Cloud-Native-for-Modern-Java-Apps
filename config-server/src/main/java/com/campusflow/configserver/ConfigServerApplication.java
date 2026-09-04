@@ -7,9 +7,9 @@ import org.springframework.cloud.config.server.EnableConfigServer;
 /**
  * Minimal Spring Cloud Config Server for CampusFlow.
  *
- * <p>Serves externalized configuration from a Git-backed repository
+ * <p>Serves externalized configuration from the native filesystem backend
  * ({@code config-repo/} at the repository root for local development).
- * Later chapters can extend this with security, encryption, and remote remotes.
+ * Later chapters can discuss Git, Vault, security, and refresh strategies.
  */
 @SpringBootApplication
 @EnableConfigServer
