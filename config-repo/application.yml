@@ -1,0 +1,6 @@
+# Shared defaults served to all applications that ask the Config Server.
+# Application-specific files (for example campusflow-monolith.yml) override these values.
+
+campusflow:
+  notifications:
+    from-address: noreply@campusflow.example

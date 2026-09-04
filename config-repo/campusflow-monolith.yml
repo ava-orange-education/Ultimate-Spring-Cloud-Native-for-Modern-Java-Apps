@@ -1,0 +1,9 @@
+# Externalized settings for the CampusFlow monolith (spring.application.name=campusflow-monolith).
+# These values illustrate what a Config Server can own later in a multi-service layout.
+# The monolith still runs with its local application.yml by default — see config-server/README.md.
+
+campusflow:
+  school-name: CampusFlow Academy (Config Server)
+  features:
+    attendance-reminders: true
+    enrollment-confirmation: true
