@@ -150,9 +150,19 @@ notifications (standalone — no foreign keys)
 [ PostgreSQL ]
 ```
 
-Docker: `docker/` | Kubernetes: `k8s/` | CI: `.github/workflows/ci.yml`
+Local configuration lives in `monolith-baseline/src/main/resources/application.yml` (environment overrides supported).
 
-## Target architecture (companion guidance — not implemented)
+A **minimal Spring Cloud Config Server** is also available for Chapter 7 learning:
+
+```
+[ Config Server :8888 ]  ← reads Git repo at config-repo/
+```
+
+The monolith does **not** import Config Server by default. See `config-server/README.md` for how a client would use `spring.config.import` (Config Data API). Vault, encryption, and Config Server security are intentionally out of scope here.
+
+Docker: `docker/` | Kubernetes: `k8s/` | CI: `.github/workflows/ci.yml` | Config Server: `config-server/`
+
+## Target architecture (companion guidance — not fully implemented)
 
 ```
 [ Client ]
@@ -165,6 +175,8 @@ Docker: `docker/` | Kubernetes: `k8s/` | CI: `.github/workflows/ci.yml`
     |            |                |
     v            v                v
 [ PostgreSQL ] [ own DB ]     [ own DB ]
+         \
+          \---- shared / per-service config via Config Server (Git) ----/
 ```
 
-See `docs/extraction-guides/gateway-routing.md` for routing examples.
+See `docs/extraction-guides/gateway-routing.md` for routing examples and `config-server/README.md` for centralized configuration.

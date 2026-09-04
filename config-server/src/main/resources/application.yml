@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: campusflow-config-server
+  cloud:
+    config:
+      server:
+        git:
+          # Local Git backend for the companion repository.
+          # Initialize once: see config-server/README.md
+          uri: ${CONFIG_GIT_URI:file://${user.dir}/../config-repo}
+          default-label: main
+          clone-on-start: true
+          # Avoid writing a working copy under /tmp when serving a local file:// repo
+          force-pull: false
+
+server:
+  port: ${SERVER_PORT:8888}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when_authorized
+
+info:
+  app:
+    name: CampusFlow Config Server
+    description: Minimal Spring Cloud Config Server (Git backend)
+    version: 0.1.0
+
+logging:
+  level:
+    root: INFO
+    org.springframework.cloud.config: INFO
