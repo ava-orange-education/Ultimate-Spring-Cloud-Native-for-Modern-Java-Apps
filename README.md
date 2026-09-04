@@ -100,7 +100,7 @@ Alex and Jordan are pre-enrolled in Algebra I. Use these IDs in the book's examp
 ```
 ├── monolith-baseline/     ← Start here: the Spring Boot monolith
 ├── config-server/         ← Minimal Spring Cloud Config Server (Ch. 7)
-├── config-repo/           ← Sample Git-backed configuration for the Config Server
+├── config-repo/           ← Sample configuration files for the Config Server (ordinary folder)
 ├── docker/                ← Containerization (Dockerfile, docker-compose)
 ├── k8s/                   ← Kubernetes manifests
 ├── docs/                  ← Architecture notes, chapter guides, extraction guides

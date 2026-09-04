@@ -2,7 +2,7 @@
 
 Minimal [Spring Cloud Config Server](https://docs.spring.io/spring-cloud-config/reference/server.html) for the CampusFlow companion repository.
 
-This module demonstrates **centralized, Git-backed configuration** for Chapter 7 (Introducing Spring Cloud Components). It is intentionally small: later chapters can add security, encryption, remote Git remotes, and refresh strategies.
+This module demonstrates **centralized configuration** for Chapter 7 (Introducing Spring Cloud Components). It uses the **native filesystem backend** so the example stays small and runnable inside this repository.
 
 > **Not wired into the monolith by default.** The monolith still starts with its local `application.yml`. Use the client section below when you want to try Config Server consumption.
 
@@ -11,86 +11,58 @@ This module demonstrates **centralized, Git-backed configuration** for Chapter 7
 | Path | Role |
 |------|------|
 | `config-server/` | Spring Boot Config Server (`:8888`) |
-| `config-repo/` | Local Git configuration repository (sample YAML) |
+| `config-repo/` | Ordinary folder with sample YAML (tracked in this repository) |
+
+`config-repo/` is a normal directory in CampusFlow — not a separate repository. The Config Server reads files from that folder using the native backend. Readers do **not** need to initialize another repository.
 
 ## Prerequisites
 
 - Java 21
 - Maven 3.9+
-- Git
-
-## One-time: initialize the local config Git repository
-
-Spring Cloud Config’s Git backend expects a real Git repository. From the repository root:
-
-```bash
-cd config-repo
-git init -b main
-git add .
-git -c user.name="CampusFlow" -c user.email="campusflow@example.com" \
-  commit -m "Initial CampusFlow configuration"
-cd ..
-```
-
-The `-c user.name` / `-c user.email` options set identity for this commit only, so you do not need a global Git user configured.
-
-You only need to do this once on your machine (or after a fresh clone). Automated tests use an isolated temporary Git repository and do **not** modify `config-repo/`.
-
-### Verify the local repository
-
-```bash
-cd config-repo
-git branch --show-current    # expect: main
-git rev-list --count HEAD    # expect: at least 1
-cd ..
-```
 
 ## Run the Config Server
 
-The default Git URI (`file://${user.dir}/../config-repo`) assumes the process is started from the `config-server/` directory:
+The default search location (`file:${user.dir}/../config-repo`) assumes the process is started from the `config-server/` directory:
 
 ```bash
 cd config-server
 mvn spring-boot:run
 ```
 
-If you start from another working directory (IDE run configuration, packaged JAR, etc.), set an absolute URI:
+If you start from another working directory (IDE run configuration, packaged JAR, etc.), set an absolute or alternative filesystem location:
 
 ```bash
-CONFIG_GIT_URI="file:///absolute/path/to/Ultimate-Spring-Cloud-Native-for-Modern-Java-Apps/config-repo" \
+CONFIG_SEARCH_LOCATION="file:///absolute/path/to/Ultimate-Spring-Cloud-Native-for-Modern-Java-Apps/config-repo" \
   mvn spring-boot:run
 ```
 
-Health check:
+Then verify:
 
 ```bash
 curl http://localhost:8888/actuator/health
+curl http://localhost:8888/campusflow-monolith/default
 ```
 
-## Fetch configuration
+## How configuration is served
 
-Config Server serves properties by **application name**, **profile**, and **label** (Git branch/tag):
+Config Server serves properties by **application name** and **profile**:
 
 ```text
-/{application}/{profile}[/{label}]
+/{application}/{profile}
 ```
 
-Examples:
+Example:
 
 ```bash
-# Shared + monolith-specific properties (default profile, main label)
 curl http://localhost:8888/campusflow-monolith/default
-
-# Explicit label
-curl http://localhost:8888/campusflow-monolith/default/main
 ```
 
 Sample files in `config-repo/`:
 
 | File | Served for |
 |------|------------|
-| `application.yml` | All applications |
-| `campusflow-monolith.yml` | `spring.application.name=campusflow-monolith` |
+| `application.yml` | Shared defaults for all applications |
+| `campusflow-monolith.yml` | Application-specific settings when `spring.application.name=campusflow-monolith` |
 
 ## How CampusFlow clients consume Config Server (Config Data API)
 
@@ -134,7 +106,7 @@ CampusFlow already binds `campusflow.*` through `AppProperties`. No change is re
 ### Runtime behaviour (Chapter 7 scope)
 
 - Clients load configuration from Config Server during **startup** (Config Data loading).
-- Committing a change in `config-repo/` updates what the Config Server can serve next; it does **not** automatically push into an already running client.
+- Changing a file under `config-repo/` updates what the Config Server can serve next; it does **not** automatically push into an already running client.
 - `/actuator/refresh`, `@RefreshScope`, and Spring Cloud Bus are intentionally **out of scope** for this minimal example.
 
 ### What this repository does *not* do yet
@@ -144,6 +116,8 @@ CampusFlow already binds `campusflow.*` through `AppProperties`. No change is re
 - No live configuration refresh for running clients.
 
 Those topics belong to later infrastructure chapters.
+
+> The native filesystem backend is used here to keep the Chapter 7 companion example small and runnable. Production systems commonly use a dedicated Git repository, Vault, or another managed configuration backend.
 
 ## Build and test
 

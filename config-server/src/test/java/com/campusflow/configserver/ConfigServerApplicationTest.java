@@ -1,7 +1,5 @@
 package com.campusflow.configserver;
 
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.lib.PersonIdent;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +9,7 @@ import org.springframework.cloud.config.environment.Environment;
 import org.springframework.cloud.config.environment.PropertySource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
@@ -25,29 +24,30 @@ import java.util.stream.Stream;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("native")
 class ConfigServerApplicationTest {
 
-    private static Path temporaryConfigRepo;
+    private static Path temporaryConfigDir;
 
     @DynamicPropertySource
-    static void registerTemporaryGitBackend(DynamicPropertyRegistry registry) throws Exception {
-        temporaryConfigRepo = createTemporaryGitConfigRepository();
-        registry.add("spring.cloud.config.server.git.uri", () -> temporaryConfigRepo.toUri().toString());
-        registry.add("spring.cloud.config.server.git.default-label", () -> "main");
-        registry.add("spring.cloud.config.server.git.clone-on-start", () -> "true");
+    static void registerTemporaryNativeBackend(DynamicPropertyRegistry registry) throws Exception {
+        temporaryConfigDir = createTemporaryConfigDirectory();
+        registry.add(
+                "spring.cloud.config.server.native.search-locations",
+                () -> temporaryConfigDir.toUri().toString());
     }
 
     @AfterAll
-    static void deleteTemporaryGitConfigRepository() throws IOException {
-        if (temporaryConfigRepo == null || !Files.exists(temporaryConfigRepo)) {
+    static void deleteTemporaryConfigDirectory() throws IOException {
+        if (temporaryConfigDir == null || !Files.exists(temporaryConfigDir)) {
             return;
         }
-        try (Stream<Path> paths = Files.walk(temporaryConfigRepo)) {
+        try (Stream<Path> paths = Files.walk(temporaryConfigDir)) {
             paths.sorted(Comparator.reverseOrder()).forEach(path -> {
                 try {
                     Files.deleteIfExists(path);
                 } catch (IOException ignored) {
-                    // best-effort cleanup of the disposable test repository
+                    // best-effort cleanup of the disposable test directory
                 }
             });
         }
@@ -57,7 +57,7 @@ class ConfigServerApplicationTest {
     private TestRestTemplate restTemplate;
 
     @Test
-    void servesSharedAndApplicationSpecificConfigurationFromGitBackend() {
+    void servesSharedAndApplicationSpecificConfigurationFromNativeBackend() {
         ResponseEntity<Environment> response =
                 restTemplate.getForEntity("/campusflow-monolith/default", Environment.class);
 
@@ -72,26 +72,30 @@ class ConfigServerApplicationTest {
                 .isEqualTo("noreply@campusflow.example");
     }
 
+    /**
+     * Config Server returns property sources highest-priority first. Use putIfAbsent so
+     * earlier (higher-priority) values are kept.
+     */
     private static Map<String, Object> flattenPropertySources(Environment environment) {
         Map<String, Object> properties = new LinkedHashMap<>();
         for (PropertySource propertySource : environment.getPropertySources()) {
             for (Map.Entry<?, ?> entry : propertySource.getSource().entrySet()) {
-                properties.put(String.valueOf(entry.getKey()), entry.getValue());
+                properties.putIfAbsent(String.valueOf(entry.getKey()), entry.getValue());
             }
         }
         return properties;
     }
 
-    private static Path createTemporaryGitConfigRepository() throws Exception {
-        Path repoDir = Files.createTempDirectory("campusflow-config-server-test-");
+    private static Path createTemporaryConfigDirectory() throws IOException {
+        Path configDir = Files.createTempDirectory("campusflow-config-server-test-");
 
-        Files.writeString(repoDir.resolve("application.yml"), """
+        Files.writeString(configDir.resolve("application.yml"), """
                 campusflow:
                   notifications:
                     from-address: noreply@campusflow.example
                 """);
 
-        Files.writeString(repoDir.resolve("campusflow-monolith.yml"), """
+        Files.writeString(configDir.resolve("campusflow-monolith.yml"), """
                 campusflow:
                   school-name: CampusFlow Academy (Config Server)
                   features:
@@ -99,16 +103,6 @@ class ConfigServerApplicationTest {
                     enrollment-confirmation: true
                 """);
 
-        PersonIdent author = new PersonIdent("CampusFlow", "campusflow@example.com");
-        try (Git git = Git.init().setDirectory(repoDir.toFile()).setInitialBranch("main").call()) {
-            git.add().addFilepattern(".").call();
-            git.commit()
-                    .setMessage("Initial CampusFlow configuration")
-                    .setAuthor(author)
-                    .setCommitter(author)
-                    .call();
-        }
-
-        return repoDir;
+        return configDir;
     }
 }
