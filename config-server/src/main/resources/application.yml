@@ -7,11 +7,10 @@ spring:
         git:
           # Local Git backend for the companion repository.
           # Initialize once: see config-server/README.md
+          # Default relative path assumes the process is started from config-server/
           uri: ${CONFIG_GIT_URI:file://${user.dir}/../config-repo}
           default-label: main
           clone-on-start: true
-          # Avoid writing a working copy under /tmp when serving a local file:// repo
-          force-pull: false
 
 server:
   port: ${SERVER_PORT:8888}

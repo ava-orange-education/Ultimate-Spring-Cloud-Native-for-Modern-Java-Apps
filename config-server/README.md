@@ -27,20 +27,34 @@ Spring Cloud Config’s Git backend expects a real Git repository. From the repo
 cd config-repo
 git init -b main
 git add .
-git commit -m "Initial CampusFlow configuration"
+git -c user.name="CampusFlow" -c user.email="campusflow@example.com" \
+  commit -m "Initial CampusFlow configuration"
 cd ..
 ```
 
-You only need to do this once on your machine (or after a fresh clone). CI/tests perform the same step automatically when needed.
+The `-c user.name` / `-c user.email` options set identity for this commit only, so you do not need a global Git user configured.
+
+You only need to do this once on your machine (or after a fresh clone). Automated tests use an isolated temporary Git repository and do **not** modify `config-repo/`.
+
+### Verify the local repository
+
+```bash
+cd config-repo
+git branch --show-current    # expect: main
+git rev-list --count HEAD    # expect: at least 1
+cd ..
+```
 
 ## Run the Config Server
+
+The default Git URI (`file://${user.dir}/../config-repo`) assumes the process is started from the `config-server/` directory:
 
 ```bash
 cd config-server
 mvn spring-boot:run
 ```
 
-Override the Git URI if your working directory is not `config-server/`:
+If you start from another working directory (IDE run configuration, packaged JAR, etc.), set an absolute URI:
 
 ```bash
 CONFIG_GIT_URI="file:///absolute/path/to/Ultimate-Spring-Cloud-Native-for-Modern-Java-Apps/config-repo" \
@@ -117,11 +131,17 @@ Notes:
 
 CampusFlow already binds `campusflow.*` through `AppProperties`. No change is required there — Config Server simply becomes another property source for the same keys (`campusflow.school-name`, feature flags, and so on).
 
+### Runtime behaviour (Chapter 7 scope)
+
+- Clients load configuration from Config Server during **startup** (Config Data loading).
+- Committing a change in `config-repo/` updates what the Config Server can serve next; it does **not** automatically push into an already running client.
+- `/actuator/refresh`, `@RefreshScope`, and Spring Cloud Bus are intentionally **out of scope** for this minimal example.
+
 ### What this repository does *not* do yet
 
 - The monolith is **not** connected to Config Server out of the box (quick start stays simple).
 - No Vault, encryption, or HTTP security on the Config Server.
-- No `/actuator/refresh` or Spring Cloud Bus for live reloads.
+- No live configuration refresh for running clients.
 
 Those topics belong to later infrastructure chapters.
 
