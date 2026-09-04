@@ -99,6 +99,8 @@ Alex and Jordan are pre-enrolled in Algebra I. Use these IDs in the book's examp
 
 ```
 ├── monolith-baseline/     ← Start here: the Spring Boot monolith
+├── config-server/         ← Minimal Spring Cloud Config Server (Ch. 7)
+├── config-repo/           ← Sample configuration files for the Config Server (ordinary folder)
 ├── docker/                ← Containerization (Dockerfile, docker-compose)
 ├── k8s/                   ← Kubernetes manifests
 ├── docs/                  ← Architecture notes, chapter guides, extraction guides
@@ -116,8 +118,9 @@ Each chapter builds on the previous one. Use this table to find the code discuss
 | REST API and validation | `*/controller/`, `*/dto/` packages |
 | Shared database and coupling | `docs/architecture.md` |
 | Domain events and boundaries | `enrollment/event/`, `notification/listener/`, `docs/event-storming.md` |
-| Externalized configuration | `monolith-baseline/src/main/resources/application.yml` |
+| Externalized configuration | `monolith-baseline/src/main/resources/application.yml`, `config-server/`, `config-repo/` |
 | Feature flags | `monolith-baseline/src/main/java/com/campusflow/config/AppProperties.java` |
+| Spring Cloud Config Server | `config-server/` (see README for Config Data API client usage) |
 | Database migrations (Flyway) | `monolith-baseline/src/main/resources/db/migration/` |
 | Error handling | `monolith-baseline/src/main/java/com/campusflow/common/exception/GlobalExceptionHandler.java` |
 | Actuator, health, metrics | `monolith-baseline/src/main/resources/application.yml` → `management.*` |
@@ -198,6 +201,8 @@ All settings can be overridden with environment variables:
 | `CAMPUSFLOW_SCHOOL_NAME` | `CampusFlow Academy` | Display name |
 | `CAMPUSFLOW_FEATURE_ATTENDANCE_REMINDERS` | `true` | Send alerts on absence |
 | `CAMPUSFLOW_FEATURE_ENROLLMENT_CONFIRMATION` | `true` | Send alerts on enrollment |
+
+For **centralized configuration** with Spring Cloud Config Server (optional, Chapter 7), see [config-server/README.md](config-server/README.md). The monolith does not connect to Config Server by default.
 
 ## Troubleshooting
 
