@@ -1,23 +1,34 @@
-# Multi-stage build for a compact runtime image.
-FROM eclipse-temurin:21-jdk-alpine AS build
+# Chapter 8 — multi-stage build for the CampusFlow monolith.
+# Build context: repository root.
+
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /workspace
 
 COPY monolith-baseline/pom.xml monolith-baseline/pom.xml
-COPY monolith-baseline/src monolith-baseline/src
+RUN mvn -f monolith-baseline/pom.xml dependency:go-offline
 
-RUN apk add --no-cache maven \
-    && mvn -f monolith-baseline/pom.xml -DskipTests package \
-    && apk del maven
+COPY monolith-baseline/src monolith-baseline/src
+RUN mvn -f monolith-baseline/pom.xml -DskipTests package \
+    && set -eu \
+    && jars="$(find monolith-baseline/target -maxdepth 1 -type f -name '*.jar' \
+         ! -name '*-sources.jar' \
+         ! -name '*-javadoc.jar')" \
+    && count="$(printf '%s\n' "$jars" | sed '/^$/d' | wc -l | tr -d ' ')" \
+    && test "$count" -eq 1 \
+    && cp "$jars" /workspace/app.jar
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-RUN addgroup -S campusflow && adduser -S campusflow -G campusflow
+RUN addgroup -S -g 10001 campusflow \
+    && adduser -S -u 10001 -G campusflow campusflow
+
+COPY --from=build --chown=campusflow:campusflow /workspace/app.jar /app/app.jar
+
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0 -XX:+ExitOnOutOfMemoryError"
+
 USER campusflow
 
-COPY --from=build /workspace/monolith-baseline/target/campusflow-monolith-*.jar app.jar
-
-ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0"
 EXPOSE 8080
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
