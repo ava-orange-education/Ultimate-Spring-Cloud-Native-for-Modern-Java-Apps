@@ -1,0 +1,26 @@
+# Optional Ingress for Chapter 9.
+# Requires an NGINX Ingress controller, a hosts/DNS entry for campusflow.local,
+# and a TLS Secret named campusflow-tls in the campusflow namespace.
+# Do not commit certificate private keys or real secret values.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: campusflow-monolith
+  namespace: campusflow
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - campusflow.local
+      secretName: campusflow-tls
+  rules:
+    - host: campusflow.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: campusflow-monolith
+                port:
+                  number: 80
