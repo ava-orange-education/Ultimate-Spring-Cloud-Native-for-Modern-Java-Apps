@@ -13,8 +13,9 @@ This is intentionally compact. It demonstrates Deployments, Services, ConfigMaps
 | `secret.example.yaml` | Example credentials (copy before use) |
 | `postgres.yaml` | PostgreSQL Deployment + Service |
 | `deployment.yaml` | Monolith Deployment (probes, security, `/tmp` volume) |
-| `service.yaml` | ClusterIP Service for the monolith (`80` → `8080`) |
+| `service.yaml` | ClusterIP Service for the monolith (`80` → `8080`, port name `http`) |
 | `ingress.yaml` | **Optional** TLS Ingress (`campusflow.local`) |
+| `servicemonitor.yaml` | **Optional** Prometheus Operator `ServiceMonitor` for `/actuator/prometheus` |
 
 ## Prerequisites
 
@@ -59,6 +60,14 @@ Optional Ingress (only after an NGINX Ingress controller is installed and a `cam
 ```bash
 kubectl apply -f k8s/ingress.yaml
 ```
+
+Optional ServiceMonitor (only if Prometheus Operator or `kube-prometheus-stack` is already installed — this repository does **not** install Prometheus or Grafana):
+
+```bash
+kubectl apply -f k8s/servicemonitor.yaml
+```
+
+The monolith exposes Prometheus metrics at `/actuator/prometheus` (scraped via the Service port named `http`).
 
 ## Wait for readiness
 

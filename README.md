@@ -123,12 +123,14 @@ Each chapter builds on the previous one. Use this table to find the code discuss
 | Spring Cloud Config Server | `config-server/` (see README for Config Data API client usage) |
 | Database migrations (Flyway) | `monolith-baseline/src/main/resources/db/migration/` |
 | Error handling | `monolith-baseline/src/main/java/com/campusflow/common/exception/GlobalExceptionHandler.java` |
-| Actuator, health, metrics | `monolith-baseline/src/main/resources/application.yml` → `management.*` |
+| Actuator, health, metrics, Prometheus | `monolith-baseline/src/main/resources/application.yml` → `management.*` |
+| Custom enrollment metric | `monolith-baseline/.../enrollment/metrics/EnrollmentMetrics.java` |
 | Structured logging | `monolith-baseline/src/main/resources/logback-spring.xml` |
 | Dockerfile and local containers | `docker/` |
 | Kubernetes deployment | `k8s/` |
 | ConfigMaps and Secrets | `k8s/configmap.yaml`, `k8s/secret.example.yaml` |
 | Readiness and liveness probes | `k8s/deployment.yaml` |
+| Optional Prometheus ServiceMonitor | `k8s/servicemonitor.yaml` |
 | CI/CD pipeline | `.github/workflows/ci.yml` |
 | Service extraction guides | `docs/extraction-guides/notification-service.md`, `docs/extraction-guides/attendance-service.md` |
 | Strangler Fig gateway routing | `docs/extraction-guides/gateway-routing.md` |
@@ -154,6 +156,9 @@ Base URL: `http://localhost:8080`
 | `GET` | `/api/notifications` | List sent notifications |
 | `GET` | `/actuator/health` | Application health |
 | `GET` | `/actuator/metrics` | Application metrics |
+| `GET` | `/actuator/prometheus` | Prometheus scrape endpoint |
+
+> **Operational note:** Do not expose Actuator observability endpoints (including `/actuator/prometheus`) publicly in production. Restrict them to your monitoring network or cluster-internal scrapers.
 
 ### Hands-on exercises
 
