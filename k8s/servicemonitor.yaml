@@ -1,0 +1,21 @@
+# Optional — requires Prometheus Operator or kube-prometheus-stack (CRD must exist).
+# This repository does not install Prometheus, Grafana, or the operator.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: campusflow-monolith
+  namespace: campusflow
+  labels:
+    app: campusflow-monolith
+spec:
+  selector:
+    matchLabels:
+      app: campusflow-monolith
+  namespaceSelector:
+    matchNames:
+      - campusflow
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 15s
+      scrapeTimeout: 10s
