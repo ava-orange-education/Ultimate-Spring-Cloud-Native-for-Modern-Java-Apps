@@ -124,7 +124,7 @@ Each chapter builds on the previous one. Use this table to find the code discuss
 | Database migrations (Flyway) | `monolith-baseline/src/main/resources/db/migration/` |
 | Error handling | `monolith-baseline/src/main/java/com/campusflow/common/exception/GlobalExceptionHandler.java` |
 | Actuator, health, metrics, Prometheus | `monolith-baseline/src/main/resources/application.yml` → `management.*` |
-| Custom enrollment metric | `monolith-baseline/.../enrollment/metrics/EnrollmentMetrics.java` |
+| Custom enrollment metric | `monolith-baseline/src/main/java/com/campusflow/enrollment/metrics/EnrollmentMetrics.java` |
 | Structured logging | `monolith-baseline/src/main/resources/logback-spring.xml` |
 | Dockerfile and local containers | `docker/` |
 | Kubernetes deployment | `k8s/` |
