@@ -17,7 +17,7 @@ All material is on the `main` branch. Use the table below to find what to open a
 | 7 | Introducing Spring Cloud Components | `config-server/`, `config-repo/`, `docs/extraction-guides/gateway-routing.md` | Minimal Spring Cloud Config Server (native filesystem backend) and Gateway routing guide |
 | 8 | Containerizing Java Applications with Docker | `docker/` | Multi-stage `Dockerfile`, `docker-compose.yml` |
 | 9 | Orchestrating Cloud-Native Applications with Kubernetes | `k8s/` | Deployment, Service, ConfigMap, Secret example, probes |
-| 10 | Observability, Monitoring, and Logging | `monolith-baseline/src/main/resources/logback-spring.xml`, Actuator endpoints | Structured JSON logs, `/actuator/health`, `/actuator/metrics` |
+| 10 | Observability, Monitoring, and Logging | `application.yml` (`management.*`), `enrollment/metrics/EnrollmentMetrics.java`, `logback-spring.xml`, optional `k8s/servicemonitor.yaml` | Actuator metrics, Prometheus registry, HTTP latency histogram/SLO buckets, custom enrollment counter, structured JSON logging, optional ServiceMonitor |
 | 11 | Security in Cloud-Native Environments | `k8s/secret.example.yaml` | Secret externalization pattern; broader security practices are covered in the book |
 | 12 | CI/CD Pipelines for Cloud Native Systems | `.github/workflows/ci.yml` | Build, test, and container image pipeline |
 | 13 | Operating and Maintaining Cloud-Native Java Applications | `k8s/deployment.yaml`, `README.md` (Troubleshooting) | Health probes, graceful shutdown, local run instructions |
@@ -44,11 +44,13 @@ All material is on the `main` branch. Use the table below to find what to open a
 | Spring Cloud Gateway routing example | Yes — `docs/extraction-guides/gateway-routing.md` (companion documentation) | Ch. 7 |
 | Docker, Compose | Yes — `docker/` | Ch. 8 |
 | Kubernetes manifests, probes, ConfigMap/Secret | Yes — `k8s/` | Ch. 9 |
-| Actuator health and metrics, structured logging | Yes — monolith config | Ch. 10 |
+| Actuator metrics, Prometheus registry, custom enrollment counter, structured JSON logging | Yes — monolith config + `EnrollmentMetrics` | Ch. 10 |
+| Optional Prometheus Operator ServiceMonitor | Yes — `k8s/servicemonitor.yaml` (requires operator already installed) | Ch. 10 |
+| Full monitoring / log aggregation / distributed tracing stacks (Prometheus server, Grafana, ELK, collectors, Jaeger/Tempo) | Not installed by this repository | Ch. 10 (concepts) |
 | Security hardening (OAuth2, mTLS, policies) | Not implemented here | Ch. 11 |
 | CI pipeline | Yes — `.github/workflows/ci.yml` | Ch. 12 |
 | Operations, troubleshooting, incident response | Partially — probes, graceful shutdown | Ch. 13 |
-| Distributed tracing, service mesh, serverless | Not implemented here | Ch. 10, 14 (concepts) |
+| Service mesh, serverless | Not implemented here | Ch. 14 (concepts) |
 
 ## Suggested reading order
 
