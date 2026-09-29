@@ -1,0 +1,14 @@
+# Optional profile: spring.profiles.active=oauth2
+# The default CampusFlow quickstart stays unsecured. Enable this profile only when
+# validating JWTs against a real issuer you operate yourself.
+# The issuer URI below is an example placeholder, not a deployable identity provider.
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: ${CAMPUSFLOW_SECURITY_ISSUER_URI:https://idp.example.com/realms/campusflow}
+
+campusflow:
+  security:
+    audience: ${CAMPUSFLOW_SECURITY_AUDIENCE:campusflow-api}

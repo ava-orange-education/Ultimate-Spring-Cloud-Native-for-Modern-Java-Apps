@@ -20,12 +20,15 @@ spec:
       labels:
         app: campusflow-monolith
     spec:
+      automountServiceAccountToken: false
       terminationGracePeriodSeconds: 30
       securityContext:
         runAsNonRoot: true
         runAsUser: 10001
         runAsGroup: 10001
         fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: campusflow-monolith
           image: campusflow/monolith:0.1.0
