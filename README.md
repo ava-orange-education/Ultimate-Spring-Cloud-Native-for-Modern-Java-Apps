@@ -131,11 +131,24 @@ Each chapter builds on the previous one. Use this table to find the code discuss
 | ConfigMaps and Secrets | `k8s/configmap.yaml`, `k8s/secret.example.yaml` |
 | Readiness and liveness probes | `k8s/deployment.yaml` |
 | Optional Prometheus ServiceMonitor | `k8s/servicemonitor.yaml` |
+| Optional OAuth2 Resource Server (profile `oauth2`) | `monolith-baseline/src/main/resources/application-oauth2.yml`, `monolith-baseline/src/main/java/com/campusflow/security/` |
+| Kubernetes workload hardening | `k8s/deployment.yaml` (`automountServiceAccountToken`, `seccompProfile`) |
 | CI/CD pipeline | `.github/workflows/ci.yml` |
 | Service extraction guides | `docs/extraction-guides/notification-service.md`, `docs/extraction-guides/attendance-service.md` |
 | Strangler Fig gateway routing | `docs/extraction-guides/gateway-routing.md` |
 
 For the chapter-by-chapter guide (Ch. 1–14), see [docs/learning-path.md](docs/learning-path.md).
+
+### Optional OAuth2 Resource Server (Chapter 11)
+
+The default quickstart stays **unsecured** for local learning. OAuth2 JWT validation activates only when you enable the `oauth2` Spring profile against a **real** issuer you operate yourself. The URI in `application-oauth2.yml` is an example placeholder — not a deployable identity provider.
+
+```bash
+cd monolith-baseline
+mvn spring-boot:run -Dspring-boot.run.profiles=oauth2
+```
+
+Override issuer and audience with `CAMPUSFLOW_SECURITY_ISSUER_URI` and `CAMPUSFLOW_SECURITY_AUDIENCE` when pointing at your own IdP. Automated coverage lives in `ResourceServerSecurityTest` (mocked `JwtDecoder`, no live tokens).
 
 ## API reference
 
@@ -206,6 +219,8 @@ All settings can be overridden with environment variables:
 | `CAMPUSFLOW_SCHOOL_NAME` | `CampusFlow Academy` | Display name |
 | `CAMPUSFLOW_FEATURE_ATTENDANCE_REMINDERS` | `true` | Send alerts on absence |
 | `CAMPUSFLOW_FEATURE_ENROLLMENT_CONFIRMATION` | `true` | Send alerts on enrollment |
+| `CAMPUSFLOW_SECURITY_ISSUER_URI` | `https://idp.example.com/realms/campusflow` | JWT issuer URI (**oauth2** profile only; example placeholder) |
+| `CAMPUSFLOW_SECURITY_AUDIENCE` | `campusflow-api` | Required JWT audience (**oauth2** profile only) |
 
 For **centralized configuration** with Spring Cloud Config Server (optional, Chapter 7), see [config-server/README.md](config-server/README.md). The monolith does not connect to Config Server by default.
 
