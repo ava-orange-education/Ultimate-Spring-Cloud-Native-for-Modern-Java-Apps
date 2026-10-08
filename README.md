@@ -204,7 +204,20 @@ cd monolith-baseline
 mvn verify
 ```
 
-Tests use an in-memory H2 database and do not require PostgreSQL or Docker.
+Most tests use an in-memory H2 database (`test` profile) and do not require PostgreSQL or Docker.
+
+One optional PostgreSQL integration test (`CampusFlowPostgresIntegrationTest`) uses **Testcontainers**. It starts Postgres in Docker when available. If Docker is not running locally, that test class is skipped (`disabledWithoutDocker = true`) so the rest of the suite still passes. GitHub Actions always runs it because the runner has Docker.
+
+### CI pipeline (Chapter 12)
+
+GitHub Actions workflow: [`.github/workflows/ci.yml`](.github/workflows/ci.yml).
+
+| Trigger | What runs |
+|---------|-----------|
+| **Pull request** | Parallel Maven verify for `monolith-baseline` and `config-server` (build + tests, including Testcontainers PostgreSQL on the monolith job) |
+| **Push to `main`** | The same tests, then — only after both succeed — a local Docker image build (`campusflow/monolith:ci` and `campusflow/monolith:<commit-sha>`) |
+
+The pipeline does **not** push images to a registry and does **not** deploy anything.
 
 ## Configuration
 

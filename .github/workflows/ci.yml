@@ -2,30 +2,16 @@ name: CI
 
 on:
   push:
-    branches: [main, master]
+    branches: [main]
   pull_request:
 
 jobs:
-  build-and-test:
+  test-monolith:
+    name: Test monolith-baseline
     runs-on: ubuntu-latest
-
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_DB: campusflow
-          POSTGRES_USER: campusflow
-          POSTGRES_PASSWORD: campusflow
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U campusflow -d campusflow"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-
     steps:
-      - uses: actions/checkout@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
@@ -36,15 +22,38 @@ jobs:
 
       - name: Build and test monolith
         working-directory: monolith-baseline
-        env:
-          CAMPUSFLOW_DB_URL: jdbc:postgresql://localhost:5432/campusflow
-          CAMPUSFLOW_DB_USER: campusflow
-          CAMPUSFLOW_DB_PASSWORD: campusflow
         run: mvn -B verify
+
+  test-config-server:
+    name: Test config-server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
 
       - name: Build and test config server
         working-directory: config-server
         run: mvn -B verify
 
+  build-container-image:
+    name: Build container image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [test-monolith, test-config-server]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
       - name: Build Docker image
-        run: docker build -f docker/Dockerfile -t campusflow/monolith:ci .
+        run: >
+          docker build -f docker/Dockerfile
+          -t campusflow/monolith:ci
+          -t campusflow/monolith:${{ github.sha }}
+          .
