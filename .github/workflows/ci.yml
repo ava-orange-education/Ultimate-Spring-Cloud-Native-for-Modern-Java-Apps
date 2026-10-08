@@ -20,6 +20,9 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
+      - name: Verify Docker availability
+        run: docker info
+
       - name: Build and test monolith
         working-directory: monolith-baseline
         run: mvn -B verify
