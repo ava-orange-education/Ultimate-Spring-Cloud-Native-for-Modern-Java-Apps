@@ -247,6 +247,8 @@ For **centralized configuration** with Spring Cloud Config Server (optional, Cha
 | `curl: URL rejected: Malformed input` | Run each `curl` command separately. Do not paste API response JSON on the same line as a `curl` command. |
 | Maven build fails on database | For tests, just run `mvn verify` (uses H2). For `spring-boot:run`, ensure PostgreSQL is running. |
 
+For Kubernetes incidents, follow the [CampusFlow unavailable runbook](docs/runbooks/campusflow-unavailable.md).
+
 ## Architecture (for curious readers)
 
 The baseline monolith has intentional architectural tensions that later chapters address:

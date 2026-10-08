@@ -20,7 +20,7 @@ All material is on the `main` branch. Use the table below to find what to open a
 | 10 | Observability, Monitoring, and Logging | `monolith-baseline/src/main/resources/application.yml` (`management.*`), `monolith-baseline/src/main/java/com/campusflow/enrollment/metrics/EnrollmentMetrics.java`, `monolith-baseline/src/main/resources/logback-spring.xml`, optional `k8s/servicemonitor.yaml` | Actuator metrics, Prometheus registry, HTTP latency histogram/SLO buckets, custom enrollment counter, structured JSON logging, optional ServiceMonitor |
 | 11 | Security in Cloud-Native Environments | `monolith-baseline/src/main/resources/application-oauth2.yml`, `monolith-baseline/src/main/java/com/campusflow/security/`, `monolith-baseline/src/test/java/com/campusflow/security/ResourceServerSecurityTest.java`, `k8s/deployment.yaml`, `k8s/secret.example.yaml` | Optional OAuth2 JWT Resource Server profile, automated security tests, Secret externalization, Pod hardening (`automountServiceAccountToken`, `seccompProfile`) |
 | 12 | CI/CD Pipelines for Cloud Native Systems | `.github/workflows/ci.yml`, `monolith-baseline/src/test/java/com/campusflow/CampusFlowPostgresIntegrationTest.java` | PR vs `main` jobs, parallel Maven tests, Testcontainers PostgreSQL, local Docker image tags (no registry push / no deploy) |
-| 13 | Operating and Maintaining Cloud-Native Java Applications | `k8s/deployment.yaml`, `README.md` (Troubleshooting) | Health probes, graceful shutdown, local run instructions |
+| 13 | Operating and Maintaining Cloud-Native Java Applications | `docs/runbooks/campusflow-unavailable.md`, `k8s/deployment.yaml`, `k8s/poddisruptionbudget.yaml`, `monolith-baseline/src/main/resources/application.yml` | Operational runbook, diagnose and rollback, health probes, graceful shutdown, controlled voluntary disruptions |
 | 14 | Real-World Case Studies and Future of Cloud-Native Java | `docs/architecture.md`, `docs/extraction-guides/` | Target architecture, Strangler Fig routing, extraction case study |
 
 ## Migration journey in this repository
@@ -51,7 +51,7 @@ All material is on the `main` branch. Use the table below to find what to open a
 | mTLS / service mesh, external secret operators, admission policies, image-signature enforcement, deployed identity provider | Not installed by this repository | Ch. 11 (concepts) |
 | CI pipeline (PR tests, main image build, Testcontainers PostgreSQL) | Yes — `.github/workflows/ci.yml`, `CampusFlowPostgresIntegrationTest` | Ch. 12 |
 | Image registries, GitOps, progressive delivery, Jenkins/GitLab CI | Not installed by this repository | Ch. 12 (concepts) |
-| Operations, troubleshooting, incident response | Partially — probes, graceful shutdown | Ch. 13 |
+| Operations runbook, PodDisruptionBudget, probes, graceful shutdown | Yes — `docs/runbooks/campusflow-unavailable.md`, `k8s/poddisruptionbudget.yaml`, deployment + application lifecycle settings | Ch. 13 |
 | Service mesh, serverless | Not implemented here | Ch. 14 (concepts) |
 
 ## Suggested reading order
