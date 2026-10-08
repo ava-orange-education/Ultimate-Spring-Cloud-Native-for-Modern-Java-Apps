@@ -14,6 +14,7 @@ This is intentionally compact. It demonstrates Deployments, Services, ConfigMaps
 | `postgres.yaml` | PostgreSQL Deployment + Service |
 | `deployment.yaml` | Monolith Deployment (probes, security, `/tmp` volume) |
 | `service.yaml` | ClusterIP Service for the monolith (`80` → `8080`, port name `http`) |
+| `poddisruptionbudget.yaml` | Limits voluntary disruption to at most one monolith pod |
 | `ingress.yaml` | **Optional** TLS Ingress (`campusflow.local`) |
 | `servicemonitor.yaml` | **Optional** Prometheus Operator `ServiceMonitor` for `/actuator/prometheus` |
 
@@ -53,6 +54,7 @@ kubectl apply -f k8s/secret.yaml
 kubectl apply -f k8s/postgres.yaml
 kubectl apply -f k8s/deployment.yaml
 kubectl apply -f k8s/service.yaml
+kubectl apply -f k8s/poddisruptionbudget.yaml
 ```
 
 Optional Ingress (only after an NGINX Ingress controller is installed and a `campusflow-tls` Secret exists):
@@ -115,4 +117,6 @@ This deletes all CampusFlow resources in that namespace, including any optional 
 - **`readOnlyRootFilesystem: true`** with an `emptyDir` mounted at `/tmp`.
 - **Startup**, readiness, and liveness probes use Spring Boot Actuator endpoints.
 - **`terminationGracePeriodSeconds: 30`** aligns with the monolith’s graceful shutdown (`server.shutdown=graceful`, `spring.lifecycle.timeout-per-shutdown-phase=20s`).
+- The monolith runs with **two replicas** and a **RollingUpdate** strategy; graceful shutdown lets in-flight requests finish during pod termination.
+- **`poddisruptionbudget.yaml`** allows at most one voluntarily unavailable monolith pod (`maxUnavailable: 1`). It does not protect against crashes, node failures, or bad deployments.
 - Advanced chapter topics (service mesh, autoscaling, sealed secrets, operators) are **not** implemented here.
